@@ -45,11 +45,11 @@ int main() {
 void assertCanRemove() {
   setup();
   produce();
+  produce();
   assert(q->value==something);
   synchronizedAccess(&consume, false, false, false);
   assert(q->value == nothing);
   assert(q->next == consumeLocation);
-
 }
 
 void assert(bool val) {
@@ -99,6 +99,7 @@ void consume() {
   while(consumeLocation->value == nothing) {
     consumeLocation = consumeLocation->next;
   }
+  assert(consumeLocation == q->next);
 }
 
 
