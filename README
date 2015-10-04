@@ -1,0 +1,68 @@
+COP4610 – Operating Systems Environments
+Project 1
+Objective
+This project allows you to observe the operation of processes as they access a shared resource.
+Task
+For this project, you will use Linux system calls to take advantage of semaphores to protect a critical
+section (shared memory). As described in class, assume we have producers inserting data into and
+consumers removing data from a circular queue of size 10 located in shared memory.
+Your project will take in 3 arguments:
+p1 n m o
+Where:
+ p1 is the name of the executable
+ n is the number of producer processes the program generates to supply data to the queue
+ m is the number of consumer processes the program generates to remove data from the queue
+ o is the number of items that each producer will produce
+Notice: Not every combination of n, m and o will work. Test that (n * o ) % m == 0.
+The program will fork n producers and m consumers. The consumers must consume all the items
+produced. For example, if your program is invoked with
+p1 4 1 5
+Your program will fork 4 producers and 1 consumer. Each of the 4 producers will generate 5 integers
+which are stored in the circular queue (shared memory), and the 1 consumer will consume 20 integers.
+You must delete all resources (processes, shared memory, and semaphores) prior to the termination of
+the program.
+Important Note: If your program does not delete all its shared resources, a penalty will be applied for
+each shared resource that remains after program termination.
+During execution, the program should display a message each time a producer puts an item in the queue
+or a consumer removes an item from the queue. Print the ID of the producer/consumer process, the
+item produced/consumed, the location in the queue where the item was stored/retrieved, the value of
+the semaphores involved each time the queue is modified, and the total number of items
+produced/consumed. The printout will be similar to the following:
+pid item loc sem0 sem1 sem2 action tot prod tot con
+123456 345 0 0 7 1 produced 1 0
+123457 349 1 0 6 2 produced 2 0
+654342 345 0 0 6 2 consumed 2 1
+654342 349 1 0 7 1 consumed 2 2
+Important Note: It is recommended that the message should be displayed within the code that controls
+access to the shared memory.
+Students should use the three semaphores for the following purposes:
+ sem0 – Controls access to the critical space
+o 1 – A producer/consumer can access the critical space
+o 0 – A producer/consumer is blocked until the critical space is accessible
+ sem1 – IsFull flag for producers
+o > 0 – The queue is not full, and a producer can add an item
+o 0 – The queue is full, and a producer is blocked until the queue is no longer full
+ sem2 – IsEmpty flag for consumers
+o > 0 – The queue is not empty, and a consumer can remove an item
+o 0 – The queue is empty, and a consumer is blocked until the queue is no longer empty
+Important Note: Everything the processes need to share (queue, queue pointers, producer/consumer
+counts, array of child processes, etc.) must be allocated and stored in the critical section.
+The project deliverable will be submitted using the FileUploader tool available in the Tools section on
+the course website. The project deliverable should include the following items:
+ The source code of the program
+ A makefile for compiling the source code
+ Documentation
+o Describe the operation of the program
+o Explain any issues/difficulties you had while writing the program
+ A sample of tests results
+o A test involving less than 10 items
+o A test involving between 10 and 50 items
+o A test involving between 50 and 100 items
+ Any other files you would like to include with the project
+
+To help you understand the use of semaphores and shared memory, sample programs are available in
+your home folder on the class server (i.e., /home/n00123456/project_1/).
+Class server information:
+IP Address: 139.62.210.160
+Username: n00123456 (replace with your N# all lowercase)
+Password: password (you should change your password immediately after your first log in)
