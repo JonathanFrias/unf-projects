@@ -17,36 +17,38 @@ enum states {
 
 struct queue* createQueue();
 void assertValidQueue();
-void assertCanInsert();
+void assertCanProduce();
 void assertCanRemove();
 void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty);
 void setup();
-void insert();
+void produce();
+void consume();
 
 void assert(bool val);
 
 struct queue* q;
 struct queue* first;
-struct queue* insertLocation;
+struct queue* produceLocation;
 struct queue* consumeLocation;
 
 void setup() {
-  insertLocation = first = consumeLocation = q = createQueue();
+  produceLocation = first = consumeLocation = q = createQueue();
 }
 
 int main() {
   assertValidQueue();
-  assertCanInsert();
+  assertCanProduce();
   assertCanRemove();
   exit(0);
 }
 
 void assertCanRemove() {
   setup();
-  insert();
+  produce();
   assert(q->value==something);
-  // synchronizedAccess(&remove, false, false, false);
-  assert(false);
+  synchronizedAccess(&consume, false, false, false);
+  assert(q->value == nothing);
+  assert(q->next == consumeLocation);
 
 }
 
@@ -57,15 +59,48 @@ void assert(bool val) {
   }
 }
 
-void assertCanInsert() {
+void assertCanProduce() {
   setup();
-  synchronizedAccess(&insert, false, false, false);
+  synchronizedAccess(&produce, false, false, false);
 
   if(q->value != something) {
-    printf("syncronized insert failed!");
-    exit(5);
+    printf("syncronized produce failed!");
+    exit(6);
+  }
+  assert(q->next == produceLocation);
+}
+/**
+ * Produce using the global produceLocation variable.
+ */
+void produce() {
+  if(produceLocation->value != nothing) {
+    printf("cannot produce item at position %d that already exists!", produceLocation->position);
+    exit(4);
+  }
+  produceLocation->value = something;
+
+  // find next available produceLocation.
+  // Although, it **SHOULD** always just be the next element
+  while(produceLocation->value == something) {
+    produceLocation = produceLocation->next;
   }
 }
+
+/*
+ * This function is the inverse of produce().
+ */
+void consume() {
+  if(consumeLocation->value != something) {
+    printf("cannot remove nothing from item at position %d that already exists!", consumeLocation->position);
+    exit(7);
+  }
+  consumeLocation->value = nothing;
+
+  while(consumeLocation->value == nothing) {
+    consumeLocation = consumeLocation->next;
+  }
+}
+
 
 /*
  * as you might imagine, this creates a queue.
@@ -75,7 +110,7 @@ void assertCanInsert() {
 struct queue* createQueue() {
   struct queue* result = (struct queue*) malloc(sizeof(struct queue));
 
-  struct queue* current = result; 
+  struct queue* current = result;
   int i;
   for(i = 0; i < 10; i++) {
     current->next = malloc(sizeof(struct queue));
@@ -89,6 +124,9 @@ struct queue* createQueue() {
   return result;
 }
 
+/**
+ * provides synchronizedAccess based on current semaphore lock values: randomAccessLock, isFull, isEmpty
+ */
 void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty) {
   if(randomAccessLock) {
     // TODO randomAccessLock();
@@ -109,25 +147,6 @@ void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, 
   // TODO
   // set full lock if full
   // set empty lock if empty
-}
-
-/**
- *
- * Insert using the global insertLocation variable.
- *
- */
-void insert() {
-  if(insertLocation->value != nothing) {
-    printf("cannot insert item at position %d that already exists!");
-    exit(4);
-  }
-  insertLocation->value = something;
-
-  // find next available insertLocation.
-  // Although, it **SHOULD** always just be the next element
-  while(insertLocation->value != nothing) {
-    insertLocation = insertLocation->next;
-  }
 }
 
 /*
