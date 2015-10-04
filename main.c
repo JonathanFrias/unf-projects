@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 struct queue {
   int value;
@@ -15,16 +16,55 @@ enum states {
 };
 
 struct queue* createQueue();
-void assertValidQueue(struct queue* p);
+void assertValidQueue();
+void assertCanInsert();
+void assertCanRemove();
+void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty);
+void setup();
+void insert();
+
+void assert(bool val);
 
 struct queue* q;
 struct queue* first;
 struct queue* insertLocation;
 struct queue* consumeLocation;
 
+void setup() {
+  insertLocation = first = consumeLocation = q = createQueue();
+}
+
 int main() {
-  insertLocation = consumeLocation = q = createQueue();
-  assertValidQueue(q);
+  assertValidQueue();
+  assertCanInsert();
+  assertCanRemove();
+  exit(0);
+}
+
+void assertCanRemove() {
+  setup();
+  insert();
+  assert(q->value==something);
+  // synchronizedAccess(&remove, false, false, false);
+  assert(false);
+
+}
+
+void assert(bool val) {
+  if(!val) {
+    printf("assertion failed!");
+    exit(5);
+  }
+}
+
+void assertCanInsert() {
+  setup();
+  synchronizedAccess(&insert, false, false, false);
+
+  if(q->value != something) {
+    printf("syncronized insert failed!");
+    exit(5);
+  }
 }
 
 /*
@@ -49,17 +89,34 @@ struct queue* createQueue() {
   return result;
 }
 
+void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty) {
+  if(randomAccessLock) {
+    // TODO randomAccessLock();
+  }
+  if(isFull) {
+    //TODO wait until not full
+    //randomAccessLock();
+  }
+  if(isEmpty) {
+    //TODO wait until not full
+    //randomAccessLock()
+  }
+
+  // call function
+  (*function)();
+
+
+  // TODO
+  // set full lock if full
+  // set empty lock if empty
+}
+
 /**
  *
  * Insert using the global insertLocation variable.
  *
  */
 void insert() {
-  // TODO needs to block here until the fullLock is released.
-  // That way we don't lock the queue and then fail to insert
-
-  // TODO it needs to lock access to the qeueu
-
   if(insertLocation->value != nothing) {
     printf("cannot insert item at position %d that already exists!");
     exit(4);
@@ -71,7 +128,6 @@ void insert() {
   while(insertLocation->value != nothing) {
     insertLocation = insertLocation->next;
   }
-  //TODO unlock access to queue
 }
 
 /*
@@ -79,8 +135,10 @@ void insert() {
  * a LinkedList of Queue structs, in ASC order by q->position.
  * Also last->next->position == first->position
  */
-void assertValidQueue(struct queue* first) {
+void assertValidQueue() {
+  setup();
   int i;
+  struct queue* first = q;
   struct queue* current = first;
 
   for(i = 0; i < 10; i++) {
