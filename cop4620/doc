@@ -1,0 +1,36 @@
+N00680283 Jonathan Frias
+DUE: 9/10/2015
+
+This is a ruby project that analyzes a C- program for tokens.
+
+This program takes receives a C- file and reports returns the tokens.
+
+Program features:
+Comments are completely ignored
+Nested multi line comments are supported
+recognizes the following as case sensitive keywords:
+   int,
+   void,
+   return,
+   if,
+   else,
+   float,
+   true,
+   false,
+   while
+recognizes identifiers, assignments, comparisions a = 1;
+Recognizes constant values, like integers and float
+Detects invalid tokens for example '@'
+Detects arithmatic expressions /*+-
+Detects nested blocks { { } }
+Recognizes parenthesis and nested parenthesis ( ( ) )
+Matches (), [], and {} together for proper ordering and
+supports array notation: a[1]
+
+There is a entire test program to document the
+behavior of the program located in spec/output_spec.rb
+The test program gives input and will expect an output.
+
+It uses the rspec to test. To run the tests, install rspec
+with 'gem install --user-install rspec'
+and then run 'rspec' from the root directory
