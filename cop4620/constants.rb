@@ -1,0 +1,12 @@
+module Constants
+  VOID = "KEYWORD: VOID"
+  INT = "KEYWORD: INT"
+  FLOAT = "KEYWORD: FLOAT"
+
+  LEFT_PAREN = '('
+  RIGHT_PAREN = ')'
+  LEFT_BRACKET = '['
+  RIGHT_BRACKET = ']'
+  SELECTION_STATEMENT = "KEYWORD: IF"
+  ELSE = "KEYWORD: ELSE"
+end

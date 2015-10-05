@@ -1,7 +1,38 @@
 require 'spec_helper'
 
-$show_goto = 1
+  $show_goto = 1
+  $show_accept = 1
 RSpec.describe A2 do
+
+  # start                -> declaration_list
+  # declaration_list     -> declaration_list declaration | declaration
+  # declaration          -> var_declaration | func_declaration
+  # var_declaration      -> type_specifier ID; | type_specifier ID[NUM];
+  # type_specifier       -> int | void | float
+  # func_declaration     -> type_specifier ID ( params ) compound_statement
+  # params               -> param_list | void
+  # param_list           -> param_list , param | param
+  # param                -> type_specifier ID | type_specifier ID [ ]
+  # compound_statement   -> { local_declarations statement_list }
+  # local_declarations   -> local_declarations var_declaration | EMPTY
+  # statement_list       -> statement_list statement | EMPTY
+  # statement            -> expression_statement | compound_statement | selection_statement | iteration_statement | return_statement
+  # expression_statement -> expression; | ;
+  # selection_statement  -> if ( expression ) statement | if ( expression ) statement else statement
+  # iteration_statement  -> while ( expression ) statement
+  # return_statement     -> return ; | return expression ;
+  # expression           -> var = expression | simple_expression
+  # var                  -> ID | ID [ expression ]
+  # simple_expression    -> additive_expression relop additive_expression | additive_expression
+  # relop                -> <= | < | > | >= | == | !=
+  # additive_expression  -> additive_expression addop term | term
+  # addop                -> + | -
+  # term                 -> term mulop factor | factor
+  # mulop                -> * | /
+  # factor               -> ( expression ) | var | call | NUM
+  # call                 -> ID ( args )
+  # args                 -> args_list | EMPTY
+  # args_list            -> args_list , expression | expression
 
   context "accepts and rejects" do
     subject { described_class }
@@ -12,21 +43,77 @@ RSpec.describe A2 do
 
         int b;
       int main(void) {}
-      float f(int x);
+      float f(int x) {}
 
       void g( void) {};
       "
     end
 
+    let(:valid3) do
+      "
+      int main(int a, float b, int c) {
+      }
+      "
+    end
+
+    let(:valid2) do
+      "
+      float main() {
+      if(a==b) {
+        return 1 + 2;
+      } else {
+        return 1 > 2;
+      }}"
+    end
+
+    let(:invalid1) do
+      "
+      int f() {
+        int g() {
+        }
+      }
+      "
+    end
+
+    let(:valid_compares) do
+      "
+      int main() {
+      if(a[1] == b) {
+      }
+
+      int a = b[0] = 3;
+      float c = b[21] == 2;
+      if (b [1] == b[3]) {
+      }
+      }
+      "
+    end
+
+    let(:valid4) do
+      "
+      int a = 1 + 1;
+      int a = (1 + 1);
+      int a = (1 + 1)-(23*2);
+      int a = ((1 + 1)-(23*2))*31+85;
+      "
+    end
+
     let(:inputs) do
       [
-        # [0, "int a[1.2];" , "REJECT" ],
-        # [1, "int b"       , "ACCEPT" ],
-        # [2, "b b"         , "REJECT" ],
-        # [3, "b b()"       , "REJECT" ],
-        # [4, "int b()"     , "ACCEPT" ],
-        # [5, "f()"         , "REJECT" ],
-        [6, valid1        , "ACCEPT" ],
+        # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
+        #  [0 , "int a[1.2];" , "REJECT" ],
+        #  [1 , "int b"       , "ACCEPT" ],
+        #  [2 , "b b"         , "REJECT" ],
+        #  [3 , "b b()"       , "REJECT" ],
+        #  [4 , "int b() {}"  , "ACCEPT" ],
+        #  [5 , "f()"         , "REJECT" ],
+        #  [6 , valid1        , "ACCEPT" ],
+        #  [7 , invalid1      , "REJECT" ],
+        [8 , valid2        , "ACCEPT" ],
+        # [9 , valid3        , "ACCEPT" ],
+        # [10 , valid_compares, "ACCEPT" ],
+        # [11 , valid_compares, "ACCEPT" ],
+        # [12, valid4,        ' "ACCEPT" ],
       ]
     end
 
