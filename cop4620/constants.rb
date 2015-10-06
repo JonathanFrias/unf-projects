@@ -3,6 +3,8 @@ module Constants
   INT = "KEYWORD: INT"
   FLOAT = "KEYWORD: FLOAT"
 
+  RETURN = 'KEYWORD: RETURN'
+
   LEFT_PAREN = '('
   RIGHT_PAREN = ')'
   LEFT_BRACKET = '['

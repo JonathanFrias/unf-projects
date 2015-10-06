@@ -59,11 +59,11 @@ RSpec.describe A2 do
     let(:valid2) do
       "
       float main() {
-      if(a==b) {
+      if(a==b)
         return 1 + 2;
-      } else {
+       else
         return 1 > 2;
-      }}"
+      }"
     end
 
     let(:invalid1) do
@@ -78,13 +78,12 @@ RSpec.describe A2 do
     let(:valid_compares) do
       "
       int main() {
-      if(a[1] == b) {
-      }
-
-      int a = b[0] = 3;
+        int a = b[0] = 3;
       float c = b[21] == 2;
-      if (b [1] == b[3]) {
-      }
+      if(a[1] == b)
+
+      if (b [1] == b[3]) return;
+
       }
       "
     end
@@ -101,19 +100,19 @@ RSpec.describe A2 do
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
-        #  [0 , "int a[1.2];" , "REJECT" ],
-        #  [1 , "int b"       , "ACCEPT" ],
-        #  [2 , "b b"         , "REJECT" ],
-        #  [3 , "b b()"       , "REJECT" ],
-        #  [4 , "int b() {}"  , "ACCEPT" ],
-        #  [5 , "f()"         , "REJECT" ],
-        #  [6 , valid1        , "ACCEPT" ],
-        #  [7 , invalid1      , "REJECT" ],
-        [8 , valid2        , "ACCEPT" ],
-        # [9 , valid3        , "ACCEPT" ],
-        # [10 , valid_compares, "ACCEPT" ],
-        # [11 , valid_compares, "ACCEPT" ],
-        # [12, valid4,        ' "ACCEPT" ],
+        [0 , "int a[1.2];"  , "REJECT" ],
+        [1 , "int b"        , "ACCEPT" ],
+        [2 , "b b"          , "REJECT" ],
+        [3 , "b b()"        , "REJECT" ],
+        [4 , "int b() {}"   , "ACCEPT" ],
+        [5 , "f()"          , "REJECT" ],
+        [6 , valid1         , "ACCEPT" ],
+        [7 , invalid1       , "REJECT" ],
+        [8 , valid2         , "ACCEPT" ],
+        [9 , valid3         , "ACCEPT" ],
+        [10, valid_compares , "ACCEPT" ],
+        [11, valid_compares , "ACCEPT" ],
+        [12, valid4         , "ACCEPT" ],
       ]
     end
 

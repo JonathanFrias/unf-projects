@@ -35,6 +35,7 @@ module A2Transitions
     goto :id
     soft_accept LEFT_BRACKET
     soft_accept RIGHT_BRACKET
+    goto :params if soft_accept ','
   end
 
   def local_declarations
@@ -46,9 +47,8 @@ module A2Transitions
 
   def compound_statement
     accept "{"
-    accept if token_type == 'INPUT'
     goto :local_declarations if type_keyword_specified?
-    goto :statement_list
+    goto :statement_list unless current_token == '}'
     accept "}"
   end
 
@@ -58,8 +58,16 @@ module A2Transitions
   end
 
   def statement
-    # goto :expression_statement
-    goto :selection_statement
+    binding.pry
+    reject if token_type != 'KEYWORD'
+    goto :return_statement if current_token == RETURN
+    goto :selection_statement if current_token == SELECTION_STATEMENT
+  end
+
+  def return_statement
+    accept RETURN
+    goto :expression if current_token != ';'
+    accept ";"
   end
 
   def selection_statement
@@ -68,8 +76,8 @@ module A2Transitions
     goto :expression
     accept RIGHT_PAREN
     goto :statement
-
     if current_token == ELSE
+      accept ELSE
       goto :statement
     end
   end
@@ -90,12 +98,10 @@ module A2Transitions
 
   def simple_expression
     goto :additive_expression
-    # if additive_expression?
-    # else
-    #   goto :additive_expression
-    #   goto :relop
-    #   goto :additive_expression
-    # end
+    if relop?
+      accept
+      goto :additive_expression
+    end
   end
 
   def additive_expression
@@ -114,10 +120,6 @@ module A2Transitions
     goto :factor
   end
 
-  def factor
-    goto :var
-  end
-
   def var
     goto :id
     if current_token == LEFT_BRACKET
@@ -132,7 +134,7 @@ module A2Transitions
       accept LEFT_PAREN
       goto :expression
       accept RIGHT_PAREN
-    elsif current_token(+2) == LEFT_PAREN
+    elsif @tokens[@current_token+2] == LEFT_PAREN
       goto :call
     elsif token_type == 'IDENTIFIER'
       goto :var
