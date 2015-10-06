@@ -24,6 +24,7 @@ module A2Transitions
     goto :params
     accept ")"
     goto :compound_statement
+    accept if token_type == 'INPUT'
   end
 
   def params

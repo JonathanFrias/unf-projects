@@ -14,11 +14,20 @@ class A2
   end
 
   def current_token(offset=0)
-    return @tokens[@current_token+offset]
+    token = @tokens[@current_token+offset]
+    if token_type(token) == 'INPUT' && ! ['(', ')', '}', '{'].include?(token)
+      @current_token += 1
+      return current_token
+    end
+    @tokens[@current_token+offset]
   end
 
   def previous_token(offset=-1)
     current_token(offset)
+  end
+
+  def back
+    @current_token -= 1
   end
 
   # accepts the given token, provided that it matches the current_token
@@ -32,10 +41,16 @@ class A2
     end
   end
 
+  def around(num)
+    (@current_token-num..@current_token+num).each do |i|
+      puts @tokens[i]
+    end
+  end
+
   # accepts only if the given token is the current_token
   def soft_accept(token=current_token)
     (token == current_token).tap do |result|
-      accept
+      accept if result
     end
   end
 
@@ -47,8 +62,8 @@ class A2
     current_token && current_token.split(":")[1].strip
   end
 
-  def token_type
-    current_token && current_token.split(":")[0]
+  def token_type(token=current_token)
+    token && token.split(":") && token.split(":")[0]
   end
 
   def to_s
@@ -98,9 +113,13 @@ class A2
     end
   end
 
-  def goto(method)
+  def print(method)
     method = method.to_s
     puts ("GOTO: " + method + (" " * (25-method.length))) + current_token if $show_goto
+  end
+
+  def goto(method)
+    print(method)
     send(method)
   end
 end
