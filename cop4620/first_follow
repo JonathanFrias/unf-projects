@@ -1,0 +1,73 @@
+
+
+# prog                 -> declaration_list
+# declaration_list     -> declaration_list declaration | declaration
+# declaration          -> var_declaration | func_declaration
+# var_declaration      -> type_specifier ID; | type_specifier ID[NUM];
+# type_specifier       -> INT | VOID | FLOAT
+# func_declaration     -> type_specifier ID ( params ) compound_statement
+# params               -> param_list | VOID
+# param_list           -> param_list , param | param
+# param                -> type_specifier ID | type_specifier ID [ ]
+# compound_statement   -> { local_declarations statement_list }
+# local_declarations   -> local_declarations var_declaration | EMPTY
+# statement_list       -> statement_list statement | EMPTY
+# statement            -> expression_statement | compound_statement | selection_statement | iteration_statement | return_statement
+# expression_statement -> expression ; | ;
+# selection_statement  -> IF ( expression ) statement | IF ( expression ) statement ELSE statement
+# iteration_statement  -> WHILE ( expression ) statement
+# return_statement     -> RETURN ; | RETURN expression ;
+# expression           -> var = expression | simple_expression
+# var                  -> ID | ID [ expression ]
+# simple_expression    -> additive_expression relop additive_expression | additive_expression
+# relop                -> <= | < | > | >= | == | !=
+# additive_expression  -> additive_expression addop term | term
+# addop                -> + | -
+# term                 -> term mulop factor | factor
+# mulop                -> * | /
+# factor               -> ( expression ) | var | call | NUM
+# call                 -> ID ( args )
+# args                 -> args_list | EMPTY
+# args_list            -> args_list , expression | expression
+
+
+# prog             -> $
+# declaration_list -> $ | int | void | float
+# declaration_list'-> ...
+# declaration  -> $ | int | void | float
+# var_declaration -> $ | int | void | float | ; | NUM | { | IF | WHILE | RETURN | ( | ID | }
+# A -> $ | int | void | float | ; | NUM | { | IF | WHILE | RETURN | ( | ID | }
+# type_specifier -> ID
+# func_declaration -> $ | int | void | float
+# params -> , | )
+# param_list -> , | )
+# param_list' -> ...
+# param -> , | )
+# B -> ...
+# compound_statement -> $ | int | void | float
+# local_declarations -> ; | ID | ( | NUM | { | IF | WHILE | RETURN | INT | VOID | FLOAT | }
+# local_declarations' -> ...
+# statement_list -> } | ; | ID | ( | NUM | { | IF | WHILE | RETURN
+# statement_list' -> ...
+# statement -> } | ID | ; | ( | NUM | { | IF | WHILE | RETURN
+# expression_statement-> } | ID | ; | ( | NUM | { | IF | WHILE | RETURN
+# selection_statement -> } | ID | ; | ( | NUM | { | IF | WHILE | RETURN
+# iteration_statement ->  } | ID | ; | ( | NUM | { | IF | WHILE | RETURN
+# return_statement ->  } | ID | ; | ( | NUM | { | IF | WHILE | RETURN
+# expression -> ) | ; | } | ] | ,
+# var -> == | * | / | ) | ; | ] | , | <= | >= | < | > | != | + | - | =
+# g -> ...
+# simple_expression -> ) | ; | } | ] | ,
+# h -> ...
+# relop -> ( | ID | NUM
+# additive_expression -> ) | ; | ] | , | <= | >= | < | > | != | + | - | ==
+# additive_expression' -> ...
+# addop -> ( | ID | NUM
+# term -> * | / | ) | ; | ] | , | <= | >= | < | > | != | + | - | ==
+# term' -> ...
+# mulop -> ( | ID | NUM
+# factor -> * | / | ) | ; | ] | , | <= | >= | < | > | != | + | - | ==
+# X -> ...
+# args -> )
+# args_list -> , | )
+# args_list' -> ...
