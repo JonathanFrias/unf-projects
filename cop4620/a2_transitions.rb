@@ -48,7 +48,7 @@ module A2Transitions
   def compound_statement
     accept "{"
     goto :local_declarations if type_keyword_specified?
-    goto :statement_list unless current_token == '}'
+    goto :statement_list if current_token != '}'
     accept "}"
   end
 
@@ -58,10 +58,10 @@ module A2Transitions
   end
 
   def statement
-    binding.pry
-    reject if token_type != 'KEYWORD'
-    goto :return_statement if current_token == RETURN
-    goto :selection_statement if current_token == SELECTION_STATEMENT
+    action ||= :return_statement if current_token == RETURN
+    action ||= :selection_statement if current_token == SELECTION_STATEMENT
+    action ||= :expression_statement
+    goto action
   end
 
   def return_statement
@@ -83,11 +83,12 @@ module A2Transitions
   end
 
   def expression_statement
-    goto :expression
+    goto :expression unless current_token == ';'
+    accept ';'
   end
 
   def expression
-    if current_token(2) == '=' # assignment
+    if next_token == '=' || (current_token(+4) == '=' && current_token(+1) == '[')
       goto :var
       accept '='
       goto :expression
@@ -134,7 +135,7 @@ module A2Transitions
       accept LEFT_PAREN
       goto :expression
       accept RIGHT_PAREN
-    elsif @tokens[@current_token+2] == LEFT_PAREN
+    elsif token_type(@tokens[@current_token+1]) == 'IDENTIFIER' && @tokens[@current_token+2] == LEFT_PAREN
       goto :call
     elsif token_type == 'IDENTIFIER'
       goto :var

@@ -78,12 +78,14 @@ RSpec.describe A2 do
     let(:valid_compares) do
       "
       int main() {
-        int a = b[0] = 3;
-      float c = b[21] == 2;
-      if(a[1] == b)
-
-      if (b [1] == b[3]) return;
-
+        int a;
+      float c;
+        b[0] = 3;
+         c = b[21];
+      if(a[1] == f)
+        if (g [1] == h[3]) return;
+        else
+          return 1+1;
       }
       "
     end
