@@ -9,21 +9,25 @@ class A2
     @current_token = 0
   end
 
-  def next_token(offset=1)
-    current_token offset
+  def next_token
+    @tokens[@current_token+1]
   end
 
-  def current_token(offset=0)
-    token = @tokens[@current_token+offset]
+  def next_next_token
+    @tokens[@current_token+2]
+  end
+
+  def current_token
+    token = @tokens[@current_token]
     if token_type(token) == 'INPUT' && ! ['(', ')', '}', '{'].include?(token)
       @current_token += 1
       return current_token
     end
-    @tokens[@current_token+offset]
+    @tokens[@current_token]
   end
 
-  def previous_token(offset=-1)
-    current_token(offset)
+  def previous_token()
+    @tokens[@current_token-1]
   end
 
   def back

@@ -88,7 +88,7 @@ module A2Transitions
   end
 
   def expression
-    if next_token == '=' || (current_token(+4) == '=' && current_token(+1) == '[')
+    if next_token == '=' || (@tokens[@current_token+4] == '=' && next_token == '[')
       goto :var
       accept '='
       goto :expression
@@ -107,8 +107,10 @@ module A2Transitions
 
   def additive_expression
     goto :term
-    goto :addop
-    goto :term
+    if addop?
+      goto :addop
+      goto :term
+    end
   end
 
   def relop
@@ -165,7 +167,11 @@ module A2Transitions
   end
 
   def addop
-    accept if ['+', '-'].include? current_token
+    accept if addop?
+  end
+
+  def addop?
+    ['+', '-'].include? current_token
   end
 
   def integer
@@ -192,7 +198,7 @@ module A2Transitions
   end
 
   def declaration
-    if current_token(+2) == '('
+    if next_next_token == '('
       goto :func_declaration
     else
       goto :var_declaration

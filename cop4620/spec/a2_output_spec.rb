@@ -90,12 +90,37 @@ RSpec.describe A2 do
       "
     end
 
-    let(:valid4) do
+    let(:nested_ifs) do
       "
-      int a = 1 + 1;
-      int a = (1 + 1);
-      int a = (1 + 1)-(23*2);
-      int a = ((1 + 1)-(23*2))*31+85;
+      int main() {
+        if(3.2 == 1.2)
+          return;
+        else
+          if(40.2 == 12E03)
+            a = 23;
+          else
+            a = 23;
+      }
+      "
+    end
+
+    let(:addition) do
+      "
+      int main (){
+      a = 1 + 1;
+      a = (1 + 1);
+      a = (1 + 1)-(23*2);
+      a = ((1 + 1)-(23*2))*31+85;
+      }
+      "
+    end
+
+    let(:valid5) do # array declarations
+      "
+      int main() {
+        int b[0];
+        int asdfasdfslkdjf[2333];
+      }
       "
     end
 
@@ -113,8 +138,9 @@ RSpec.describe A2 do
         [8 , valid2         , "ACCEPT" ],
         [9 , valid3         , "ACCEPT" ],
         [10, valid_compares , "ACCEPT" ],
-        [11, valid_compares , "ACCEPT" ],
-        [12, valid4         , "ACCEPT" ],
+        [11, addition       , "ACCEPT" ],
+        [12, valid5         , "ACCEPT" ],
+        [13, nested_ifs     , "ACCEPT" ],
       ]
     end
 

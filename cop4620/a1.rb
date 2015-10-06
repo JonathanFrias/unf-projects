@@ -207,6 +207,12 @@ class A1
     result = result.gsub(/([^\sE])\+/, '\1 +') # put spaces before +
     result = result.gsub(/([^\sE])\-/, '\1 -') # put spaces before -
 
+
+    result = result.gsub(/\)([^\s])/, ') \1') # space after )
+    result = result.gsub(/\(([^\s])/, '( \1') # space after (
+    result = result.gsub(/([^\s])\(/, '\1 (') # space before (
+    result = result.gsub(/([^\s])\)/, '\1 )') # space before )
+
     result = result.gsub(/\)([^\s])/, ') \1') # space after )
     result = result.gsub(/\(([^\s])/, '( \1') # space after (
     result = result.gsub(/([^\s])\(/, '\1 (') # space before (
@@ -217,11 +223,15 @@ class A1
     result = result.gsub(/([^\s])\[/, '\1 [') # space before [
     result = result.gsub(/([^\s])\]/, '\1 ]') # space before ]
 
+    result = result.gsub(/\]([^\s])/, '] \1') # space after ]
+    result = result.gsub(/\[([^\s])/, '[ \1') # space after [
+    result = result.gsub(/([^\s])\[/, '\1 [') # space before [
+    result = result.gsub(/([^\s])\]/, '\1 ]') # space before ]
+
     result = result.gsub(/\{([^\s])/, '{ \1') # space after {
     result = result.gsub(/\}([^\s])/, '} \1') # space after }
     result = result.gsub(/([^\s])\{/, '\1 {') # space before {
     result = result.gsub(/([^\s])\}/, '\1 }') # space before }
-
 
     result = result.gsub(/([^\s])\,/, '\1 ,') # space before ,
     result = result.gsub(/\,([^\s])/, ', \1') # space after ,
