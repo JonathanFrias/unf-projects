@@ -33,7 +33,6 @@
 
 # prog             -> $
 # declaration_list -> $ | int | void | float
-# declaration_list'-> ...
 # declaration  -> $ | int | void | float
 # var_declaration -> $ | int | void | float | ; | NUM | { | IF | WHILE | RETURN | ( | ID | }
 # A -> $ | int | void | float | ; | NUM | { | IF | WHILE | RETURN | ( | ID | }
@@ -41,9 +40,7 @@
 # func_declaration -> $ | int | void | float
 # params -> , | )
 # param_list -> , | )
-# param_list' -> ...
 # param -> , | )
-# B -> ...
 # compound_statement -> $ | int | void | float
 # local_declarations -> ; | ID | ( | NUM | { | IF | WHILE | RETURN | INT | VOID | FLOAT | }
 # local_declarations' -> ...
@@ -56,18 +53,13 @@
 # return_statement ->  } | ID | ; | ( | NUM | { | IF | WHILE | RETURN
 # expression -> ) | ; | } | ] | ,
 # var -> == | * | / | ) | ; | ] | , | <= | >= | < | > | != | + | - | =
-# g -> ...
 # simple_expression -> ) | ; | } | ] | ,
-# h -> ...
 # relop -> ( | ID | NUM
 # additive_expression -> ) | ; | ] | , | <= | >= | < | > | != | + | - | ==
-# additive_expression' -> ...
 # addop -> ( | ID | NUM
 # term -> * | / | ) | ; | ] | , | <= | >= | < | > | != | + | - | ==
 # term' -> ...
 # mulop -> ( | ID | NUM
 # factor -> * | / | ) | ; | ] | , | <= | >= | < | > | != | + | - | ==
-# X -> ...
 # args -> )
 # args_list -> , | )
-# args_list' -> ...
