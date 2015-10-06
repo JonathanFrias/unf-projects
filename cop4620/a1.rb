@@ -142,6 +142,7 @@ class A1
       '/',
       '+',
       '-',
+      ','
     ].include?(char)
   end
 
@@ -221,6 +222,10 @@ class A1
     result = result.gsub(/([^\s])\{/, '\1 {') # space before {
     result = result.gsub(/([^\s])\}/, '\1 }') # space before }
 
+
+    result = result.gsub(/([^\s])\,/, '\1 ,') # space before ,
+    result = result.gsub(/\,([^\s])/, ', \1') # space after ,
+
     result = result.gsub(/\)\)/, ' ) ) ') # case ))
     result = result.gsub(/\)\)/, ' ) ) ')
     result = result.gsub(/\)\)/, ' ) ) ')
@@ -261,7 +266,7 @@ class A1
   # Checks whether the given token contains
   # characters that belong in the language
   def valid_token?(token)
-    !token.match(/[^A-Za-z0-9!=<>\n;\(\)\*\-\+\/\.\}\{\]\[]/)
+    !token.match(/[^A-Za-z0-9!=<>\n;\(\)\*\-\+\/\.\}\{\]\[],/)
   end
 
   def to_s
