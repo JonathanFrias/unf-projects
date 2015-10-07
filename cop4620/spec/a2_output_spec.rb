@@ -1,7 +1,5 @@
 require 'spec_helper'
 
-  $show_goto = 1
-  $show_accept = 1
 RSpec.describe A2 do
 
   # start                -> declaration_list
@@ -169,6 +167,14 @@ RSpec.describe A2 do
       }"
     end
 
+    let(:function_call2) do
+      "
+      int main(void) {
+        f(a[2.2], b[3], 3 == 3);
+      }
+      "
+    end
+
     let(:compute_god) do
       # This is the program from textbook pg: 496
       "
@@ -239,29 +245,127 @@ RSpec.describe A2 do
       "
     end
 
+    let(:jake_sample1) do
+      "
+        int main(int x, float joe) {
+            int x;
+            float y;
+            void z;
+
+            if (1) {
+                void a;
+                float b;
+            } else {
+                while(5) {
+                    int x;
+                    float a;
+                    x = a + 5;
+                    ;;;;;;;;;;;;;;;;;;;;;;;
+                }
+            }
+            ;;;;;;;;;;;;;;;;;;;;;;
+            y = 5 * 7 / x + 64 * 8;
+            x = sqrt(64) + (5 * 7) / (9 + nickdaman);
+            ;;;;;;;;;;;;;;;
+            return sqrt(64);
+            ;;;;
+        }
+      "
+    end
+
+    let(:jake_sample2) do
+      "
+        void main(int arg, float martino) {
+            printf(5, 7, hello);
+            return 5 + 7;
+            x;
+        }
+      "
+    end
+
+    let(:almost_correct) do
+      "
+      int main(void) {
+        return 5+7++;
+      }
+      "
+    end
+
+    let(:only_if) do
+      "
+      if(0) {
+        printf(1+1); // reject because statement without func
+      }
+      "
+    end
+
+    let(:comments) do
+      '
+      // comment!
+      int main(void) {//{ { {
+
+        foo();
+        // asdd!@#$%(@*&#$(*&!@(#*(*%&!)(@*&#*!^%#&*^_+!@#/.,<>:"{}\
+        /* asdd!@#$%(@*&#$(*&!@(#*(*%&!)(@*&#*!^%#&*^_+!@#/.,<>:"{}\ */
+      }
+      '
+    end
+
+    let(:no_curly) do
+      "
+      int main(void) {
+      }
+      float foo(int x)
+        return stuff;
+      "
+    end
+
+    let(:bad_param1) do
+      "
+      int a(int[2] a) { // [2] is not allowed here
+      }
+      "
+    end
+
+    let(:bad_param2) do
+      "
+      int a(int[] a;) {
+      }
+      "
+    end
+
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
-        [0 , "int a[1.2];"    , "REJECT" ],
-        [1 , "int b"          , "ACCEPT" ],
-        [2 , "b b"            , "REJECT" ],
-        [3 , "b b(void)"      , "REJECT" ],
-        [4 , "int b(void){}"  , "ACCEPT" ],
-        [5 , "f(void)"        , "REJECT" ],
-        [6 , function_decs    , "ACCEPT" ],
-        [7 , invalid1         , "REJECT" ],
-        [8 , if_statements    , "ACCEPT" ],
-        [9 , func_and_var     , "ACCEPT" ],
-        [10, valid_compares   , "ACCEPT" ],
-        [11, addition         , "ACCEPT" ],
-        [12, arrays           , "ACCEPT" ],
-        [13, nested_ifs       , "ACCEPT" ],
-        [14, multiply         , "ACCEPT" ],
-        [15, add              , "ACCEPT" ],
-        [16, function_calls   , "ACCEPT" ],
-        [17, must_have_params , "REJECT" ],
-        [18, compute_god      , "ACCEPT" ],
-        [19, sort_integers    , "ACCEPT" ],
+        [0  , "int a[1.2];"    , "REJECT" ],
+        [1  , "int b"          , "ACCEPT" ],
+        [2  , "b b"            , "REJECT" ],
+        [3  , "b b(void)"      , "REJECT" ],
+        [4  , "int b(void){}"  , "ACCEPT" ],
+        [5  , "f(void)"        , "REJECT" ],
+        [6  , function_decs    , "ACCEPT" ],
+        [7  , invalid1         , "REJECT" ],
+        [8  , if_statements    , "ACCEPT" ],
+        [9  , func_and_var     , "ACCEPT" ],
+        [10 , valid_compares   , "ACCEPT" ],
+        [11 , addition         , "ACCEPT" ],
+        [12 , arrays           , "ACCEPT" ],
+        [13 , nested_ifs       , "ACCEPT" ],
+        [14 , multiply         , "ACCEPT" ],
+        [15 , add              , "ACCEPT" ],
+        [16 , function_calls   , "ACCEPT" ],
+        [17 , must_have_params , "REJECT" ],
+        [18 , compute_god      , "ACCEPT" ],
+        [19 , sort_integers    , "ACCEPT" ],
+        [20 , jake_sample1     , "ACCEPT" ],
+        [21 , jake_sample2     , "ACCEPT" ],
+        [22 , almost_correct   , "REJECT" ],
+        [23 , only_if          , "REJECT" ],
+        [24 , comments         , "ACCEPT" ],
+        [25 , no_curly         , "REJECT" ],
+        [26 , bad_param1       , "REJECT" ],
+        [27 , bad_param2       , "REJECT" ],
+        [28 , function_call2   , "ACCEPT" ],
       ]
     end
 

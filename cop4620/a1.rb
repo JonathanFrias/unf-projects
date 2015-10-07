@@ -200,6 +200,8 @@ class A1
     result = result.gsub(/\*([^\s])/, '* \1') # put spaces after *
     result = result.gsub(/\/([^\s])/, '/ \1') # put spaces after /
     result = result.gsub(/([^E])\+([^\s])/, '\1+ \2') # put spaces after +
+    result = result.gsub(/([^E])\+([^\s])/, '\1+ \2') # put spaces after +
+    result = result.gsub(/([^E])\-([^\s])/, '\1- \2') # put spaces after -
     result = result.gsub(/([^E])\-([^\s])/, '\1- \2') # put spaces after -
 
     result = result.gsub(/([^\s])\*/, '\1 *') # put spaces before *

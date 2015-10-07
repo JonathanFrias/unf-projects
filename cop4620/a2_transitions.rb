@@ -150,6 +150,8 @@ module A2Transitions
       accept LEFT_PAREN
       goto :expression
       accept RIGHT_PAREN
+    elsif current_token == ';'
+      reject
     elsif current_token.size == 1
       return
     elsif token_type == 'IDENTIFIER' && next_token == LEFT_PAREN
