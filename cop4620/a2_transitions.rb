@@ -24,11 +24,9 @@ module A2Transitions
     goto :params
     accept ")"
     goto :compound_statement
-    accept if token_type == 'INPUT'
   end
 
   def params
-    return if current_token == ')' || token_type == 'INPUT'
     return soft_accept VOID if previous_token == '(' and next_token == ')'
 
     goto :type_specifier
@@ -39,7 +37,6 @@ module A2Transitions
   end
 
   def local_declarations
-    accept if token_type == 'INPUT'
     return if current_token == '}'
     goto :var_declaration
     goto :local_declarations while type_keyword_specified?
@@ -111,6 +108,7 @@ module A2Transitions
       goto :addop
       goto :term
     end
+    goto :additive_expression if addop?
   end
 
   def relop
@@ -121,6 +119,7 @@ module A2Transitions
     goto :factor
     goto :mulop
     goto :factor
+    goto :term if mulop?
   end
 
   def var
@@ -163,7 +162,11 @@ module A2Transitions
   end
 
   def mulop
-    accept if ['*', '/'].include? current_token
+    accept if mulop?
+  end
+
+  def mulop?
+    ['*', '/'].include? current_token
   end
 
   def addop
@@ -191,10 +194,9 @@ module A2Transitions
   end
 
   def declaration_list
-    accept if token_type == "INPUT" # get rid of input statement
 
     goto :declaration
-    goto :declaration_list if token_type == 'KEYWORD' || token_type == 'INPUT'
+    goto :declaration_list if token_type == 'KEYWORD'
   end
 
   def declaration

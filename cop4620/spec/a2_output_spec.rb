@@ -37,7 +37,7 @@ RSpec.describe A2 do
   context "accepts and rejects" do
     subject { described_class }
 
-    let(:valid1) do
+    let(:function_decs) do
       "
         int a[2];
 
@@ -49,16 +49,21 @@ RSpec.describe A2 do
       "
     end
 
-    let(:valid3) do
+    let(:func_and_var) do
       "
       int main(int a, float b, int c) {
+      }
+
+      int a;
+      int f(float x) {
+
       }
       "
     end
 
-    let(:valid2) do
+    let(:if_statements) do
       "
-      float main() {
+      float main(void) {
       if(a==b)
         return 1 + 2;
        else
@@ -68,9 +73,8 @@ RSpec.describe A2 do
 
     let(:multiply) do
       "
-      int main() {
-        a * a;
-        a * a * (12* 23/a);
+      int main(void) {
+        result = a * b * (12* (23/c));
       }
 
       int f(float x, float y) {
@@ -79,10 +83,22 @@ RSpec.describe A2 do
       "
     end
 
+    let(:add) do
+      "
+      int main(void) {
+        result = a + b - (12+ (23-c));
+      }
+
+      int f(float x, float y) {
+        asdflkjsadlfkj = 12.231 + 2.1;
+      }
+      "
+    end
+
     let(:invalid1) do
       "
-      int f() {
-        int g() {
+      int f(void) {
+        int g(void) {
         }
       }
       "
@@ -90,22 +106,22 @@ RSpec.describe A2 do
 
     let(:valid_compares) do
       "
-      int main() {
+      int main(void) {
         int a;
-      float c;
+        float c;
         b[0] = 3;
-         c = b[21];
-      if(a[1] == f)
-        if (g [1] == h[3]) return;
-        else
-          return 1+1;
+        c = b[21];
+        if(a[1] == f)
+          if (g [1] == h[3]) return;
+          else
+            return 1+1;
       }
       "
     end
 
     let(:nested_ifs) do
       "
-      int main() {
+      int main(void) {
         if(3.2 == 1.2)
           return;
         else
@@ -119,18 +135,18 @@ RSpec.describe A2 do
 
     let(:addition) do
       "
-      int main (){
-      a = 1 + 1;
-      a = (1 + 1);
-      a = (1 + 1)-(23*2);
-      a = ((1 + 1)-(23*2))*31+85;
+      int main (void){
+        a = 1 + 1;
+        a = (1 + 1);
+        a = (1 + 1)-(23*2);
+        a = ((1 + 1)-(23*2))*31+85;
       }
       "
     end
 
-    let(:valid5) do # array declarations
+    let(:arrays) do
       "
-      int main() {
+      int main(void) {
         int b[0];
         int asdfasdfslkdjf[2333];
       }
@@ -140,21 +156,22 @@ RSpec.describe A2 do
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
-        [0 , "int a[1.2];"  , "REJECT" ],
-        [1 , "int b"        , "ACCEPT" ],
-        [2 , "b b"          , "REJECT" ],
-        [3 , "b b()"        , "REJECT" ],
-        [4 , "int b() {}"   , "ACCEPT" ],
-        [5 , "f()"          , "REJECT" ],
-        [6 , valid1         , "ACCEPT" ],
-        [7 , invalid1       , "REJECT" ],
-        [8 , valid2         , "ACCEPT" ],
-        [9 , valid3         , "ACCEPT" ],
-        [10, valid_compares , "ACCEPT" ],
-        [11, addition       , "ACCEPT" ],
-        [12, valid5         , "ACCEPT" ],
-        [13, nested_ifs     , "ACCEPT" ],
-        [14, multiply       , "ACCEPT" ],
+        [0 , "int a[1.2];"    , "REJECT" ],
+        [1 , "int b"          , "ACCEPT" ],
+        [2 , "b b"            , "REJECT" ],
+        [3 , "b b(void)"      , "REJECT" ],
+        [4 , "int b(void){}"  , "ACCEPT" ],
+        [5 , "f(void)"        , "REJECT" ],
+        [6 , function_decs    , "ACCEPT" ],
+        [7 , invalid1         , "REJECT" ],
+        [8 , if_statements    , "ACCEPT" ],
+        [9 , func_and_var     , "ACCEPT" ],
+        [10, valid_compares   , "ACCEPT" ],
+        [11, addition         , "ACCEPT" ],
+        [12, arrays           , "ACCEPT" ],
+        [13, nested_ifs       , "ACCEPT" ],
+        [14, multiply         , "ACCEPT" ],
+        [15, add              , "ACCEPT" ],
       ]
     end
 
