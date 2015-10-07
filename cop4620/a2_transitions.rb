@@ -1,4 +1,5 @@
 module A2Transitions
+  class RejectError < RuntimeError; end;
   include ::Constants
 
   def start
@@ -117,8 +118,11 @@ module A2Transitions
 
   def term
     goto :factor
-    goto :mulop
-    goto :factor
+    begin
+      goto :mulop
+      goto :factor
+    rescue RejectError
+    end
     goto :term if mulop?
   end
 
@@ -136,17 +140,21 @@ module A2Transitions
       accept LEFT_PAREN
       goto :expression
       accept RIGHT_PAREN
-    elsif token_type(@tokens[@current_token+1]) == 'IDENTIFIER' && @tokens[@current_token+2] == LEFT_PAREN
+    elsif current_token.size == 1
+      return
+    elsif token_type == 'IDENTIFIER' && next_token == LEFT_PAREN
       goto :call
     elsif token_type == 'IDENTIFIER'
       goto :var
-    else
+    elsif token_type == 'CONSTANT'
       goto :number
+    else
+      reject
     end
   end
 
   def number
-    accept if token_type == 'CONSTANT'
+    accept if token_type == 'CONSTANT' or reject
   end
 
   def call
@@ -157,8 +165,9 @@ module A2Transitions
   end
 
   def args
+    return if current_token == ')'
     goto :expression
-    goto :args if current_token == ','
+    goto :args if soft_accept ','
   end
 
   def mulop

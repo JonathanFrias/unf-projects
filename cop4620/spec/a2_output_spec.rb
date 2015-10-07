@@ -153,6 +153,15 @@ RSpec.describe A2 do
       "
     end
 
+    let(:function_calls) do
+      "
+      int main(void) {
+        f();
+        f(x);
+        f(x, y, z);
+      }"
+    end
+
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
@@ -172,6 +181,7 @@ RSpec.describe A2 do
         [13, nested_ifs       , "ACCEPT" ],
         [14, multiply         , "ACCEPT" ],
         [15, add              , "ACCEPT" ],
+        [16, function_calls   , "ACCEPT" ],
       ]
     end
 

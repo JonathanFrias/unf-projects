@@ -1,5 +1,4 @@
 class A2
-  class RejectError < RuntimeError; end;
 
   include ::A2Transitions
   include Constants
@@ -20,6 +19,7 @@ class A2
   def current_token
     token = @tokens[@current_token]
     if token_type(token) == 'INPUT' && ! ['(', ')', '}', '{'].include?(token)
+      puts "", "ACCEPT" + ("*"*25) + token, ""
       @current_token += 1
       return current_token
     end
@@ -38,10 +38,10 @@ class A2
   # otherwise raises a RejectError
   def accept(token=current_token)
     if token == current_token
-      puts "", "ACCEPT" + ("*"*25) + current_token, "" if $show_accept
+      puts "", "ACCEPT" + ("*"*25) + current_token, ""
       @current_token += 1
     else
-      raise RejectError
+      raise A2Transitions::RejectError
     end
   end
 
@@ -59,7 +59,7 @@ class A2
   end
 
   def reject
-    raise RejectError
+    raise A2Transitions::RejectError
   end
 
   def token_text
@@ -75,7 +75,7 @@ class A2
     # All the transitions are contained there
     begin
       goto :start
-    rescue RejectError
+    rescue A2Transitions::RejectError
       return "REJECT"
     end
 
@@ -106,20 +106,9 @@ class A2
     [INT, VOID, FLOAT].include? current_token
   end
 
-  def try(method)
-    current_location = @current_token
-    begin
-      goto method
-      true
-    rescue
-      @current_token = current_location
-      false
-    end
-  end
-
   def print(method)
     method = method.to_s
-    puts ("GOTO: " + method + (" " * (25-method.length))) + current_token if $show_goto
+    puts ("GOTO: " + method + (" " * (25-method.length))) + current_token
   end
 
   def goto(method)
