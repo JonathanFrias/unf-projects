@@ -178,13 +178,7 @@ class A1
     ""
   end
 
-  # format the given program using given regexes
-  # This mostly just adds spaces so tokens can be
-  # detected via whitespace
-  # Sidenote: I really hate parsing char by char
-  def format_raw!
-    result = ""
-    result = process_comments
+  def apply_regex(result)
     result = result.gsub(/\}/, '};') # put ; after }
     result = result.gsub(/\{/, '{;') # put ; before }
     result = result.gsub(/([^=!><])=([^=])/, '\1 = \2')
@@ -265,6 +259,17 @@ class A1
     result = result.gsub(/\((\s+)?\)/, ' ( ) ') # case ()
     result = result.gsub(/\s\s/, ' ') # remove extra spaces
     result = result.gsub(/\s+/, ' ')
+    result
+  end
+  # format the given program using given regexes
+  # This mostly just adds spaces so tokens can be
+  # detected via whitespace
+  # Sidenote: I really hate parsing char by char
+  def format_raw!
+    result = ""
+    result = process_comments
+    result = apply_regex result
+    result = apply_regex result
     result = result.delete("\n").split(';')
     result.map(&:strip)
   end

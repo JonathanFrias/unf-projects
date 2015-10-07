@@ -334,6 +334,15 @@ RSpec.describe A2 do
       "
     end
 
+    let(:blah) do
+      "
+      int main(void) {
+        if(1) return; else return 1.2;
+      }
+      "
+
+    end
+
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
@@ -366,6 +375,7 @@ RSpec.describe A2 do
         [26 , bad_param1       , "REJECT" ],
         [27 , bad_param2       , "REJECT" ],
         [28 , function_call2   , "ACCEPT" ],
+        [29 , blah             , "ACCEPT" ],
       ]
     end
 
