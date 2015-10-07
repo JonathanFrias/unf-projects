@@ -58,8 +58,18 @@ module A2Transitions
   def statement
     action ||= :return_statement if current_token == RETURN
     action ||= :selection_statement if current_token == SELECTION_STATEMENT
+    action ||= :iteration_statement if current_token == WHILE
+    action ||= :compound_statement if current_token == '{'
     action ||= :expression_statement
     goto action
+  end
+
+  def iteration_statement
+    accept WHILE
+    accept '('
+    goto :expression
+    accept ')'
+    goto :statement
   end
 
   def return_statement
@@ -130,7 +140,7 @@ module A2Transitions
     goto :id
     if current_token == LEFT_BRACKET
       accept LEFT_BRACKET
-      goto :integer
+      goto :expression
       accept RIGHT_BRACKET
     end
   end

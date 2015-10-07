@@ -4,6 +4,7 @@ module Constants
   FLOAT = "KEYWORD: FLOAT"
 
   RETURN = 'KEYWORD: RETURN'
+  WHILE = 'KEYWORD: WHILE'
 
   LEFT_PAREN = '('
   RIGHT_PAREN = ')'

@@ -104,6 +104,13 @@ RSpec.describe A2 do
       "
     end
 
+    let(:must_have_params) do
+      "
+      int main() {
+      }
+      "
+    end
+
     let(:valid_compares) do
       "
       int main(void) {
@@ -162,6 +169,76 @@ RSpec.describe A2 do
       }"
     end
 
+    let(:compute_god) do
+      # This is the program from textbook pg: 496
+      "
+      /* A program to perform Euclid's
+         Algorithm to compute god. */
+      int god(int u, int v) {
+        if(v == 0) return u;
+        else return gcd(v, u-u / v*v);
+        /* u-u/v*v == u mod v */
+      }
+
+      void main(void)
+      { int x; int y;
+        x = input(); y = input();
+        output(gcd(x, y));
+      }
+      "
+    end
+
+    let(:sort_integers) do
+      "
+      /* A program to perform selection sort on a 10
+         element array*/
+      int x[10];
+
+      int minloc( int a[], int low, int high)
+      { int i; int x; int k;
+        k = low;
+        x = a[low];
+        i = low + 1;
+        while( i < high) {
+          if(a[i] < x) {
+            x = a[i];
+            k = i;
+          }
+          i = i + 1;
+        }
+        return k;
+      }
+
+      void sort(int a[], int lwo, int high) {
+        int i; int k;
+        i = low;
+        while(i < high-1) {
+          int t;
+          k = minloc(a, i, high);
+          t = a[k];
+          a[k] = a[i];
+          a[i] = t;
+          i = i + 1;
+        }
+      }
+      void main(void)
+      {
+        int i;
+        i = 0;
+        while(i < 10) {
+          x[i] = input();
+          i = i + 1;
+        }
+        sort(x, 0, 10);
+        i = 0;
+        while(i < 10) {
+          output(x[i]);
+          i = i + 1;
+        }
+      }
+      "
+    end
+
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
@@ -182,6 +259,9 @@ RSpec.describe A2 do
         [14, multiply         , "ACCEPT" ],
         [15, add              , "ACCEPT" ],
         [16, function_calls   , "ACCEPT" ],
+        [17, must_have_params , "REJECT" ],
+        [18, compute_god      , "ACCEPT" ],
+        [19, sort_integers    , "ACCEPT" ],
       ]
     end
 
