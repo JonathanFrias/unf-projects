@@ -66,6 +66,19 @@ RSpec.describe A2 do
       }"
     end
 
+    let(:multiply) do
+      "
+      int main() {
+        a * a;
+        a * a * (12* 23/a);
+      }
+
+      int f(float x, float y) {
+        asdflkjsadlfkj = 12.231 * 2.1;
+      }
+      "
+    end
+
     let(:invalid1) do
       "
       int f() {
@@ -141,6 +154,7 @@ RSpec.describe A2 do
         [11, addition       , "ACCEPT" ],
         [12, valid5         , "ACCEPT" ],
         [13, nested_ifs     , "ACCEPT" ],
+        [14, multiply       , "ACCEPT" ],
       ]
     end
 
