@@ -40,15 +40,18 @@ RSpec.describe A1 do
 
   context "mixed multi-single line comments" do
     let(:input) do
-      "/* // */ */"
+      "/*
+//
+      */ stuff  */"
     end
 
     it "returns the valid token" do
       expect(subject.to_s.split("\n")).to eq [
-        "INPUT: / *;",
-        "/",
+        "INPUT: stuff * /;",
+        "IDENTIFIER: stuff",
         "*",
-        ";",
+        "/",
+        ";"
       ]
     end
   end

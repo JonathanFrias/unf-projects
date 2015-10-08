@@ -38,11 +38,11 @@ class A1
       end
 
       if two_chars == '//'
-        start_comment_index = start_index
+        line_start_index = start_index
         until raw_input[start_index] == "\n"[0] || start_index == raw_input.length-1 do
           start_index += 1
         end
-        indicies = indicies + [[start_comment_index, start_index]]
+        indicies = indicies + [[line_start_index, start_index]]
       end
       start_index += 1
     end
