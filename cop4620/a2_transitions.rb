@@ -12,7 +12,7 @@ module A2Transitions
 
     if current_token == '['
       accept "["
-      goto :integer
+      goto :number
       accept "]"
     end
     accept ";"

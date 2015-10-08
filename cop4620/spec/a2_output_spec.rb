@@ -459,6 +459,296 @@ float main (void)
 }"
     end
 
+    let(:missing_semi) do
+      "
+      /* test4, missing ; */
+
+      int gcd (int u , int v )
+      {
+        if ( v != 0)
+          return u
+        else
+          return gcd( v , u - u / v* v );
+        /*note u-(u/v*v) == u mod v */
+      }
+      "
+    end
+
+    let(:missing_paren) do
+      "
+int gcd (int u , int v
+{
+	if ( v != 0)
+		return u;
+	else
+		return gcd( v , u - u / v* v );
+	/*note u-(u/v*v) == u mod v */
+}
+  "
+    end
+
+    let(:missing_brace) do
+      "
+      /* test7, missing { */
+
+int gcd (int u , int v )
+
+	if ( v != 0)
+		return u;
+	else
+		return gcd( v , u - u / v* v );
+	/*note u-(u/v*v) == u mod v */
+}
+      "
+
+    end
+
+    let(:missing_other_brace) do
+      "
+/* test8, missing } */
+
+int gcd (int u , int v )
+{
+	if ( v != 0)
+		return u;
+	else
+		return gcd( v , u - u / v* v );
+	/*note u-(u/v*v) == u mod v */
+      "
+    end
+
+    let(:void_list)do
+      "
+            /* test13  testing void list accept*/
+
+      float z;
+
+      void noclue(void)
+      {
+        int s;
+        if(z=7)
+          return z;
+        while(r>z)
+        {if (x==2)
+            return x;
+        }
+
+
+      }
+      "
+    end
+
+    let(:missing_bracket) do
+      "
+      /* test16  testing array parameter missing [ */
+
+int q[6];
+
+int noclue(int z])
+{
+	int s;
+	if(z[1]=7)
+		return z;
+	while(r>z)
+	{if (x==2)
+			return x;
+	}
+
+
+}
+      "
+    end
+
+    let(:missing_other_bracket) do
+      "
+      /* test17  testing array parameter missing [ */
+
+int q[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z1]=7)
+		return z;
+	while(r>z)
+	{if (x==2)
+			return x;
+	}
+
+
+}
+      "
+    end
+
+    let(:pre_add) do
+      "
+      /* test20  testing float fail + precedes int*/
+
+int q[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z[1]=7)
+		return z;
+	while(r>z)
+	{if (x==2)
+			return +3.4E6;
+	}
+
+
+}
+      "
+    end
+
+    let(:float_accept) do
+      "
+      /* test21  testing float accept*/
+
+int q[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z[1]=7)
+		return z;
+	while(r>z)
+	{
+		if (x==2)
+			return 3.4E-6;
+	}
+
+
+}
+      "
+    end
+
+    let(:number_in_id) do
+      "/*  test23 number in ID token */
+
+int gc1d ( int u , int v )
+{	// note prob here
+	if ( v == 0 )
+		return u ;
+	else
+		return gcd ( v , u - u / v * v );
+	/* note u-(u/v*v) = u mod v */
+}"
+    end
+
+    let(:num_letter) do
+      "/* test15  testing if extra letter after number failure*/
+
+int z[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z[1] <= 7a)
+		return z;
+	while(r>z)
+	{if (x==2)
+			return x;
+	}
+
+
+}"
+    end
+
+    let(:extra_stuff) do
+      "
+      /* test51  testing if comparison extra letter failure*/
+
+
+int z[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z[1] >b= 7)		// = is token 26
+		return z;
+	while(r>z)
+	{if (x==2)
+			return x;
+	}
+
+
+}
+      "
+    end
+
+    let(:exta_compare) do
+      "/* test52  testing if comparison extra < fail*/
+
+int z[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z[1] <<= 7)		// <<= is tokens 24&25
+		return z;
+	while(r>z)
+	{if (x==2)
+			return x;
+	}
+
+
+}"
+    end
+
+    let(:extra_char) do
+      "/* test53  testing excess letter in array reference fail*/
+
+int z[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z[1a] >= 7)		// 1a is token 22
+		return z;
+	while(r>z)
+	{if (x==2)
+			return x;
+	}
+}"
+    end
+
+    let(:float_accept) do
+      "/* test54  testing float accept*/
+
+int q[6];
+
+int noclue(int z[])
+{
+	int s;
+	if(z[1]=7)
+		return z;
+	while(r>z)
+	{
+		if (x==2)
+			return 3.4E-6;
+	}
+
+	if(a>b){
+	k = k;
+	}else{
+	k = 1;
+	}
+
+	if(b>a)
+	b = 1;
+	else
+	b = 2;
+
+	if(b == a)
+	a = b;
+	else{
+	c = d;
+	}
+
+}"
+    end
+
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
@@ -493,6 +783,21 @@ float main (void)
         [28 , function_call2   , "ACCEPT" ],
         [29 , blah             , "ACCEPT" ],
         [30 , sample_project   , "ACCEPT" ],
+        [31 , missing_semi     , "REJECT" ],
+        [32 , missing_paren    , "REJECT" ],
+        [33 , missing_brace    , "REJECT" ],
+        [34 , missing_other_brace, "REJECT" ],
+        [34 , void_list        , "ACCEPT" ],
+        [35 , missing_bracket  , "REJECT" ],
+        [35 , missing_other_brace, "REJECT" ],
+        [36 , pre_add          , "REJECT" ], # fails
+        [37 , float_accept     , "ACCEPT" ],
+        [37 , number_in_id     , "ACCEPT" ],
+        [38 , num_letter       , "REJECT" ], # fails
+        [39, extra_stuff       , "REJECT" ],
+        [40, exta_compare      , "REJECT" ],
+        [41, extra_char        , "REJECT" ], # fails
+        [42, float_accept      , "REJECT" ], # fails
       ]
     end
 
