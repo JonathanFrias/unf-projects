@@ -1,6 +1,12 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 
 struct queue {
   int value;
@@ -39,6 +45,14 @@ int main() {
   assertValidQueue();
   assertCanProduce();
   assertCanRemove();
+  int semId;
+  int key = 680283;
+  if ((semId = semget(key, 3, IPC_CREAT | 0600)) == -1) {
+    printf("Failed");
+  }
+  q = shmat(semId, NULL, 0);
+  memcpy(q, createQueue(), sizeof(struct queue)*10);
+
   exit(0);
 }
 
