@@ -43,6 +43,18 @@ RSpec.describe A2 do
       int main(void) {}
       float f(int x) {}
 
+      void g( void) {}
+      "
+    end
+
+    let(:function_decs2) do
+      "
+        int a[2];
+
+        int b;
+      int main(void) {}
+      float f(int x) {}
+
       void g( void) {};
       "
     end
@@ -752,8 +764,8 @@ int noclue(int z[])
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
-        [0  , "int a[1.2];"    , "REJECT" ],
-        [1  , "int b"          , "ACCEPT" ],
+        [0  , "int a[1.2];"    , "ACCEPT" ],
+        [1  , "int b"          , "REJECT" ],
         [2  , "b b"            , "REJECT" ],
         [3  , "b b(void)"      , "REJECT" ],
         [4  , "int b(void){}"  , "ACCEPT" ],
@@ -787,26 +799,28 @@ int noclue(int z[])
         [32 , missing_paren    , "REJECT" ],
         [33 , missing_brace    , "REJECT" ],
         [34 , missing_other_brace, "REJECT" ],
-        [34 , void_list        , "ACCEPT" ],
-        [35 , missing_bracket  , "REJECT" ],
-        [35 , missing_other_brace, "REJECT" ],
-        [36 , pre_add          , "REJECT" ], # fails
-        [37 , float_accept     , "ACCEPT" ],
-        [37 , number_in_id     , "ACCEPT" ],
-        [38 , num_letter       , "REJECT" ], # fails
-        [39, extra_stuff       , "REJECT" ],
-        [40, exta_compare      , "REJECT" ],
-        [41, extra_char        , "REJECT" ], # fails
-        [42, float_accept      , "REJECT" ], # fails
+        [35 , void_list        , "ACCEPT" ],
+        [36 , missing_bracket  , "REJECT" ],
+        [37 , missing_other_brace, "REJECT" ],
+        [38 , pre_add          , "REJECT" ],
+        [39 , float_accept     , "ACCEPT" ],
+        [40 , number_in_id     , "ACCEPT" ],
+        [41 , num_letter       , "REJECT" ],
+        [42, extra_stuff       , "REJECT" ],
+        [43, exta_compare      , "REJECT" ],
+        [44, extra_char        , "REJECT" ],
+        [45, function_decs2    , "REJECT" ],
       ]
     end
 
     it "accepts and rejects" do
       inputs.each do |number, code, result, debug_level|
-        if (string = subject.new(code).to_s) != result
-          puts number.to_s + " FAILED"
+        if number == number
+          if (string = subject.new(code).to_s) != result
+            puts number.to_s + " FAILED"
+          end
+          expect(string).to eq result
         end
-        expect(string).to eq result
       end
     end
   end

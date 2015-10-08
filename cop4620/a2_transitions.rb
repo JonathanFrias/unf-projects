@@ -115,11 +115,10 @@ module A2Transitions
 
   def additive_expression
     goto :term
-    if addop?
+    while addop?
       goto :addop
       goto :term
     end
-    goto :additive_expression if addop?
   end
 
   def relop
@@ -127,13 +126,12 @@ module A2Transitions
   end
 
   def term
+    require 'pry'
     goto :factor
-    begin
+    while mulop?
       goto :mulop
       goto :factor
-    rescue RejectError
     end
-    goto :term if mulop?
   end
 
   def var
@@ -146,12 +144,11 @@ module A2Transitions
   end
 
   def factor
+    reject if ['*', '/', ')', ';', ']', ',', '<=', '>=', '<', '>', '!=', '+', '-', '=='].include? current_token
     if current_token == LEFT_PAREN
       accept LEFT_PAREN
       goto :expression
       accept RIGHT_PAREN
-    elsif current_token == ';'
-      reject
     elsif current_token.size == 1
       return
     elsif token_type == 'IDENTIFIER' && next_token == LEFT_PAREN
@@ -183,7 +180,7 @@ module A2Transitions
   end
 
   def mulop
-    accept if mulop?
+    accept if mulop? or reject
   end
 
   def mulop?
@@ -196,10 +193,6 @@ module A2Transitions
 
   def addop?
     ['+', '-'].include? current_token
-  end
-
-  def integer
-    accept if token_type == 'CONSTANT' && token_text.gsub(/[0-9]/, '') == '' or reject
   end
 
   def constant

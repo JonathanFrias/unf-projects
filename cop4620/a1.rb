@@ -4,7 +4,7 @@ class A1
 
   # initilize the world
   def initialize(input)
-    @raw_input = input
+    @raw_input = input.strip
     @paren_level = 0
     @bracket_level = 0
     @brace_level = 0
@@ -147,12 +147,15 @@ class A1
   end
 
   def identifier_output(token)
-    return "IDENTIFIER: #{token}\n" unless \
+    result = "IDENTIFIER: #{token}\n" unless \
       keyword?(token) || \
       logical_operator?(token) || \
       special_char?(token) || \
       number?(token)
-    ""
+    if ! result.nil? && result.split(":").map(&:strip)[1][0].match(/\d/)
+      return result = "INVALID IDENTIFIER: #{token}"
+    end
+    return result ? result : ""
   end
 
   # Regex to match number (supports floating points)
@@ -191,6 +194,15 @@ class A1
     result = result.gsub(/<=(.)/, '<= \1') # spaces after <=
     result = result.gsub(/>=(.)/, '>= \1') # spaces after >=
 
+    result = result.gsub(/(>)/, ' \1')
+    result = result.gsub(/(<)/, ' \1')
+
+    result = result.gsub(/>([^=])/, '> \1')
+    result = result.gsub(/<([^=])/, '> \1')
+
+    result.gsub(/>([^\s])/, '> \1')
+    result.gsub(/<([^\s])/, '> \1')
+
     result = result.gsub(/\*([^\s])/, '* \1') # put spaces after *
     result = result.gsub(/\/([^\s])/, '/ \1') # put spaces after /
     result = result.gsub(/([^E])\+([^\s])/, '\1+ \2') # put spaces after +
@@ -199,8 +211,12 @@ class A1
     result = result.gsub(/([^E])\-([^\s])/, '\1- \2') # put spaces after -
 
     result = result.gsub(/([^\s])\*/, '\1 *') # put spaces before *
+    result = result.gsub(/([^\s])\*/, '\1 *') # put spaces before *
+    result = result.gsub(/([^\s])\//, '\1 /') # put spaces before /
     result = result.gsub(/([^\s])\//, '\1 /') # put spaces before /
     result = result.gsub(/([^\sE])\+/, '\1 +') # put spaces before +
+    result = result.gsub(/([^\sE])\+/, '\1 +') # put spaces before +
+    result = result.gsub(/([^\sE])\-/, '\1 -') # put spaces before -
     result = result.gsub(/([^\sE])\-/, '\1 -') # put spaces before -
 
 
@@ -313,10 +329,19 @@ class A1
       result += ";\n"
     end
     result += "ERROR: Mismatched braces\n" if @brace_level != 0
-    result \
+    result = result \
       .gsub(/\{(\s*);/, '{') \
       .gsub(/\}(\s*);/, '}')
 
+    if raw_input[raw_input.size-1] == ';'
+      if raw_input[raw_input.size-2] == '}'
+        result += "ERROR: Cannot have ';' after ending }"
+      end
+    end
+    if ! ['}', ';'].include?(raw_input[raw_input.size-1])
+        result += "ERROR: with program termination"
+    end
+    result
   end
 
   def to_a
