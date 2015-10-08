@@ -108,13 +108,7 @@ module A2Transitions
       goto :expression if soft_accept '='
     end
 
-    if current_token == '='
-
-      accept '='
-      goto :expression
-    else
-      goto :simple_expression
-    end
+    goto :simple_expression
   end
 
   def simple_expression
