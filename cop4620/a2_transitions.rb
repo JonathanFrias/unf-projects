@@ -101,8 +101,15 @@ module A2Transitions
   end
 
   def expression
-    if next_token == '=' || (@tokens[@current_token+4] == '=' && next_token == '[')
-      goto :var
+    return if [ ')', ';', '}', ']', ','].include? current_token
+
+    if next_token == '[' || next_token == '='
+      goto :simple_expression
+      goto :expression if soft_accept '='
+    end
+
+    if current_token == '='
+
       accept '='
       goto :expression
     else
@@ -111,10 +118,24 @@ module A2Transitions
   end
 
   def simple_expression
+    return if [')', ';',  '}',  ']', ','].include? current_token
     goto :additive_expression
     if relop?
-      accept
+      goto :relop
       goto :additive_expression
+      reject if [
+        ']',
+        ',',
+        '<=',
+        '>=',
+        '<',
+        '>',
+        '!=',
+        '+',
+        '-',
+        '==',
+        '=',
+      ].include? current_token
     end
   end
 
