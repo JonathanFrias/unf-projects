@@ -153,7 +153,7 @@ class A1
       special_char?(token) || \
       number?(token)
 
-    if ! result.nil? && result.split(":").map(&:strip)[1][0].chr.match(/\d/)
+    if ! result.nil? && result.split(":").map(&:strip)[1][0] && result.split(":").map(&:strip)[1][0].chr.match(/\d/)
       return result = "INVALID IDENTIFIER: #{token}"
     end
     return result ? result : ""
