@@ -1,7 +1,12 @@
+# this file describes the transitions between methods.
+# Transitions between states are reached using a custom build goto construct.
+# This was primarility for debugging purposes.
+# The functinos defined here correspond closely the the grammar
 module A2Transitions
   class RejectError < RuntimeError; end;
   include ::Constants
 
+  # this is the "Start" symbol
   def start
     goto :declaration_list
   end

@@ -112,6 +112,7 @@ class A2
     puts debug if $debug
   end
 
+  # accepts a method and prints the method we are transitioning to
   def goto(method)
     print(method)
     send(method)
