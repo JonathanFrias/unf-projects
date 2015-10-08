@@ -19,7 +19,7 @@ class A2
   def current_token
     token = @tokens[@current_token]
     if token_type(token) == 'INPUT' && ! ['(', ')', '}', '{'].include?(token)
-      puts "", "ACCEPT" + ("*"*25) + token, ""
+      puts "", "ACCEPT" + ("*"*25) + token, "" if $debug
       @current_token += 1
       return current_token
     end
@@ -38,7 +38,7 @@ class A2
   # otherwise raises a RejectError
   def accept(token=current_token)
     if token == current_token
-      puts "", "ACCEPT" + ("*"*25) + current_token, ""
+      puts "", "ACCEPT" + ("*"*25) + current_token, "" if $debug
       @current_token += 1
     else
       raise A2Transitions::RejectError
@@ -47,7 +47,7 @@ class A2
 
   def around(num)
     (@current_token-num..@current_token+num).each do |i|
-      puts @tokens[i]
+      puts @tokens[i] if $debug
     end
   end
 
@@ -108,7 +108,8 @@ class A2
 
   def print(method)
     method = method.to_s
-    puts ("GOTO: " + method + (" " * (25-method.length))) + current_token
+    debug = ("GOTO: " + method + (" " * (25-method.length))) + current_token
+    puts debug if $debug
   end
 
   def goto(method)

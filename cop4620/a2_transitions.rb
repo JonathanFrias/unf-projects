@@ -126,7 +126,6 @@ module A2Transitions
   end
 
   def term
-    require 'pry'
     goto :factor
     while mulop?
       goto :mulop

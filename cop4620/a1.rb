@@ -152,7 +152,8 @@ class A1
       logical_operator?(token) || \
       special_char?(token) || \
       number?(token)
-    if ! result.nil? && result.split(":").map(&:strip)[1][0].match(/\d/)
+
+    if ! result.nil? && result.split(":").map(&:strip)[1][0].chr.match(/\d/)
       return result = "INVALID IDENTIFIER: #{token}"
     end
     return result ? result : ""
@@ -333,12 +334,12 @@ class A1
       .gsub(/\{(\s*);/, '{') \
       .gsub(/\}(\s*);/, '}')
 
-    if raw_input[raw_input.size-1] == ';'
-      if raw_input[raw_input.size-2] == '}'
+    if raw_input[raw_input.size-1].chr == ';'
+      if raw_input[raw_input.size-2].chr == '}'
         result += "ERROR: Cannot have ';' after ending }"
       end
     end
-    if ! ['}', ';'].include?(raw_input[raw_input.size-1])
+    if ! ['}', ';'].include?(raw_input[raw_input.size-1].chr)
         result += "ERROR: with program termination"
     end
     result
