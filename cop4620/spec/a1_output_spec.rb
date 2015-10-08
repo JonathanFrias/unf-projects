@@ -51,7 +51,8 @@ RSpec.describe A1 do
         "IDENTIFIER: stuff",
         "*",
         "/",
-        ";"
+        ";",
+        "ERROR: with program termination",
       ]
     end
   end
@@ -103,7 +104,8 @@ RSpec.describe A1 do
           ";",
           "INPUT: while;",
           "KEYWORD: WHILE",
-          ";"
+          ";",
+          "ERROR: with program termination",
         ]
       end
     end
@@ -274,6 +276,7 @@ RSpec.describe A1 do
           "=",
           "ERROR processing '3@333' on line 1!",
           ";",
+          "ERROR: with program termination"
         ]
       end
     end
@@ -455,6 +458,7 @@ RSpec.describe A1 do
           "CONSTANT: 2",
           "]",
           ";",
+          "ERROR: with program termination",
         ]
       end
 
@@ -491,6 +495,7 @@ RSpec.describe A1 do
             "]",
             "ERROR: Mismatched brackets on line 4",
             ";",
+            "ERROR: with program termination",
           ]
         end
       end

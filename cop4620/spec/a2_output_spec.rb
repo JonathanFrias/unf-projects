@@ -761,6 +761,16 @@ int noclue(int z[])
 }"
     end
 
+    let(:nested_scope) do
+      "
+      int main(void) {
+        {  // yay im nested!
+          int x;
+        }
+      }
+      "
+    end
+
     let(:inputs) do
       [
         # [ TEST_NUMBER, TEST_CODE, EXPECTED_RESULT],
@@ -810,6 +820,7 @@ int noclue(int z[])
         [43, exta_compare      , "REJECT" ],
         [44, extra_char        , "REJECT" ],
         [45, function_decs2    , "REJECT" ],
+        [46, nested_scope      , "ACCEPT" ],
       ]
     end
 
