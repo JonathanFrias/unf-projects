@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #define ELEMENTS 10
-#define QUEUE_SIZE sizeof(struct queue) * 10
+#define QUEUE_SIZE sizeof(struct queue) * ELEMENTS
 
 struct queue {
   int value;
@@ -51,17 +51,21 @@ void setup() {
   produceLocation = consumeLocation = q = createQueue();
   if ((semId = semget(key, 3, 0600 | IPC_CREAT)) == -1) {
     printf("Error creating semaphore set\n");
-    exit(1);
+    exit(11);
   }
 
   setSemVal(semId, 0, 0);
   setSemVal(semId, 1, 0);
   setSemVal(semId, 2, 0);
   // Create a segment of shared memory
-  if((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE, 0777)) == -1)
-    printf("Error: Failed to Create Shared Memory Segment"), exit(1);
-  if((shared_mem_ptr = (int *)shmat(shared_mem_id, (void *)0, 0)) == (void *)-1)
-    printf("Error: Failed to Create Shared Memory Segment"), exit(1);
+  if((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE, 0777)) == -1) {
+    printf("Error: Failed to Create Shared Memory Segment");
+    exit(12);
+  }
+  if((shared_mem_ptr = (int *)shmat(shared_mem_id, (void *)0, 0)) == (void *)-1) {
+    printf("Error: Failed to Create Shared Memory Segment");
+    exit(9);
+  }
 }
 
 int main() {
@@ -73,7 +77,6 @@ int main() {
   synchronizedAccess(&produce, true, false, false);
   exit(0);
 }
-
 
 int canReadWrite() {
   return (int) getSemVal(semId, 0) == getSemVal(semId, 1) == getSemVal(semId, 2) == 0;
@@ -206,7 +209,7 @@ void assertValidQueue() {
   struct queue* first = q;
   struct queue* current = first;
 
-  // test that queue is cirular and has 10 elements
+  // test that queue is cirular and has ELEMENTS elements
   assert(q
       ->next
       ->next
@@ -219,7 +222,7 @@ void assertValidQueue() {
       ->next
       ->next == q);
 
-  for(i = 0; i < 10; i++) {
+  for(i = 0; i < ELEMENTS; i++) {
     if(current->value != nothing) {
       printf("All entries should be initialized to nothing");
       exit(2);
