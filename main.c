@@ -27,12 +27,11 @@ void consume();
 void assert(bool val);
 
 struct queue* q;
-struct queue* first;
 struct queue* produceLocation;
 struct queue* consumeLocation;
 
 void setup() {
-  produceLocation = first = consumeLocation = q = createQueue();
+  produceLocation = consumeLocation = q = createQueue();
 }
 
 int main() {
@@ -109,12 +108,13 @@ void consume() {
  * pointer the first element to the LinkedList queue.
  */
 struct queue* createQueue() {
-  struct queue* result = (struct queue*) malloc(sizeof(struct queue));
+  int elements = 10;
+  struct queue* result = (struct queue*) malloc(elements*sizeof(struct queue));
 
   struct queue* current = result;
   int i;
-  for(i = 0; i < 10; i++) {
-    current->next = malloc(sizeof(struct queue));
+  for(i = 0; i < elements; i++) {
+    current->next = result + (i * sizeof(struct queue));
     current->position = i;
     current->value = nothing;
     current = current->next;
@@ -161,23 +161,24 @@ void assertValidQueue() {
   struct queue* first = q;
   struct queue* current = first;
 
+  // test that queue is cirular and has 10 elements
+  assert(q
+      ->next
+      ->next
+      ->next
+      ->next
+      ->next
+      ->next
+      ->next
+      ->next
+      ->next
+      ->next == q);
+
   for(i = 0; i < 10; i++) {
-    if(current->position != i) {
-      printf("queue does not contain exactly 10 elements. %d", i);
-      exit(1);
-    }
     if(current->value != nothing) {
       printf("All entries should be initialized to nothing");
       exit(2);
     }
     current = current->next;
-  }
-  struct queue* last = current->next;
-
-  // after the for loop, current should be last.
-  // Compare the last pointer with the first pointer
-  if(last != q || current->position != 0) {
-    printf("Queue is not circular!");
-    exit(3);
   }
 }
