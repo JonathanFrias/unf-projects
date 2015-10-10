@@ -76,7 +76,7 @@ int main() {
 
 
 int canReadWrite() {
-  return (int) getSemVal(semId, 0) == 0 && getSemVal(semId, 1) == 0 && getSemVal(semId, 2) == 0;
+  return (int) getSemVal(semId, 0) == getSemVal(semId, 1) == getSemVal(semId, 2) == 0;
 }
 
 /**
