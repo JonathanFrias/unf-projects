@@ -5,8 +5,12 @@
 #include <string.h>
 #include <sys/shm.h>
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/ipc.h>
+#include <unistd.h>
+
+#define ELEMENTS 10
+#define QUEUE_SIZE sizeof(struct queue) * 10
 
 struct queue {
   int value;
@@ -29,30 +33,85 @@ void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, 
 void setup();
 void produce();
 void consume();
-
+void setSemVal(int semId, int semaphore, int value);
 void assert(bool val);
+int getSemVal(int semId, int semaphore);
+int canReadWrite();
+void semIncrBy(int semId, int semaphore, int delta);
 
 struct queue* q;
 struct queue* produceLocation;
 struct queue* consumeLocation;
+int semId;
+key_t key = 680283; // Unique semaphore identifier
+int shared_mem_id, // Stores the unique identifier of the shared memory segment
+    *shared_mem_ptr; // Stores the address of the shared memory segment
 
 void setup() {
   produceLocation = consumeLocation = q = createQueue();
+  if ((semId = semget(key, 3, 0600 | IPC_CREAT)) == -1) {
+    printf("Error creating semaphore set\n");
+    exit(1);
+  }
+
+  setSemVal(semId, 0, 0);
+  setSemVal(semId, 1, 0);
+  setSemVal(semId, 2, 0);
+  // Create a segment of shared memory
+  if((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE, 0777)) == -1)
+    printf("Error: Failed to Create Shared Memory Segment"), exit(1);
+  if((shared_mem_ptr = (int *)shmat(shared_mem_id, (void *)0, 0)) == (void *)-1)
+    printf("Error: Failed to Create Shared Memory Segment"), exit(1);
 }
 
 int main() {
-  assertValidQueue();
-  assertCanProduce();
-  assertCanRemove();
-  int semId;
-  int key = 680283;
-  if ((semId = semget(key, 3, IPC_CREAT | 0600)) == -1) {
-    printf("Failed");
-  }
-  q = shmat(semId, NULL, 0);
-  memcpy(q, createQueue(), sizeof(struct queue)*10);
+  setup();
+  // assertValidQueue();
+  // assertCanProduce();
+  // assertCanRemove();
 
+  synchronizedAccess(&produce, true, false, false);
   exit(0);
+}
+
+
+int canReadWrite() {
+  return (int) getSemVal(semId, 0) == 0 && getSemVal(semId, 1) == 0 && getSemVal(semId, 2) == 0;
+}
+
+/**
+ * provides synchronizedAccess based on current semaphore lock values: randomAccessLock, isFull, isEmpty
+ */
+void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty) {
+
+  if(randomAccessLock) {
+    while(! canReadWrite()) {
+      sleep(1);
+    }
+    semIncrBy(semId, 0, 1);
+  }
+
+  // call function
+  (*function)();
+
+  // decrement back to 0
+  semIncrBy(semId, 0, -1);
+}
+
+void semIncrBy(int semId, int semaphore, int delta) {
+  struct sembuf data = {semaphore, delta, 0};
+	semop(semId, &data, 1); // Update the selected semaphore (increment/decrement)
+}
+
+int getSemVal(int semId, int semaphore) {
+  return semctl(semId, semaphore, GETVAL);
+}
+
+void setSemVal(int semId, int semaphore, int value) {
+  if (semctl(semId, semaphore, SETVAL, value) == -1) {
+    printf("Error setting semaphore %d with value %d\n", semaphore, value);
+    exit(8);
+  }
 }
 
 void assertCanRemove() {
@@ -73,7 +132,6 @@ void assert(bool val) {
 }
 
 void assertCanProduce() {
-  setup();
   synchronizedAccess(&produce, false, false, false);
 
   if(q->value != something) {
@@ -82,6 +140,7 @@ void assertCanProduce() {
   }
   assert(q->next == produceLocation);
 }
+
 /**
  * Produce using the global produceLocation variable.
  */
@@ -115,19 +174,17 @@ void consume() {
   assert(consumeLocation == q->next);
 }
 
-
 /*
  * as you might imagine, this creates a queue.
  * Although technically, it just returns a
  * pointer the first element to the LinkedList queue.
  */
 struct queue* createQueue() {
-  int elements = 10;
-  struct queue* result = (struct queue*) malloc(elements*sizeof(struct queue));
+  struct queue* result = (struct queue*) malloc(QUEUE_SIZE);
 
   struct queue* current = result;
   int i;
-  for(i = 0; i < elements; i++) {
+  for(i = 0; i < ELEMENTS; i++) {
     current->next = result + (i * sizeof(struct queue));
     current->position = i;
     current->value = nothing;
@@ -139,38 +196,12 @@ struct queue* createQueue() {
   return result;
 }
 
-/**
- * provides synchronizedAccess based on current semaphore lock values: randomAccessLock, isFull, isEmpty
- */
-void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty) {
-  if(randomAccessLock) {
-    // TODO randomAccessLock();
-  }
-  if(isFull) {
-    //TODO wait until not full
-    //randomAccessLock();
-  }
-  if(isEmpty) {
-    //TODO wait until not full
-    //randomAccessLock()
-  }
-
-  // call function
-  (*function)();
-
-
-  // TODO
-  // set full lock if full
-  // set empty lock if empty
-}
-
 /*
  * Valid Queue is defined as a queue that contains
  * a LinkedList of Queue structs, in ASC order by q->position.
  * Also last->next->position == first->position
  */
 void assertValidQueue() {
-  setup();
   int i;
   struct queue* first = q;
   struct queue* current = first;
