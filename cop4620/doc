@@ -1,0 +1,81 @@
+N00680283 Jonathan Frias
+DUE: 9/10/2015
+
+This is a ruby project that analyzes a C- program for tokens.
+
+This program takes receives a C- file and reports returns the tokens.
+
+Program features:
+Comments are completely ignored
+Nested multi line comments are supported
+recognizes the following as case sensitive keywords:
+   int,
+   void,
+   return,
+   if,
+   else,
+   float,
+   true,
+   false,
+   while
+recognizes identifiers, assignments, comparisions a = 1;
+Recognizes constant values, like integers and float
+Detects invalid tokens for example '@'
+Detects arithmatic expressions /*+-
+Detects nested blocks { { } }
+Recognizes parenthesis and nested parenthesis ( ( ) )
+Matches (), [], and {} together for proper ordering and
+supports array notation: a[1]
+
+There is a entire test program to document the
+behavior of the program located in spec/output_spec.rb
+The test program gives input and will expect an output.
+
+It uses the rspec to test. To run the tests, install rspec
+with 'gem install --user-install rspec'
+and then run 'rspec' from the root directory
+
+
+-------- Project 2
+This program parses program to see if the correspond to the grammar.
+This program was written using 100% VIM :)
+I cheated just a little bit on this program by looking ahead for a couple of the cases past strict LR(1) parsing, but don't go more than 2!
+This program uses a program called rspec(ruby-spec) to specify behavior of this program.
+Following the instructions from above, simply run rspec to include the new tests for project2.
+This program was tested using the 47 sample programs that are defined in the spec/a2_output_spec.rb file!
+
+This program currently supports the whole grammar. Corrections from assignment1 have been made according to grammar.
+This program prints ACCEPT or REJECT according to wheter or not the given program is parsable using the grammar.
+
+This program currently supports the following grammar:
+# prog                 -> declaration_list
+# declaration_list     -> declaration_list declaration | declaration
+# declaration          -> var_declaration | func_declaration
+# var_declaration      -> type_specifier ID; | type_specifier ID[NUM];
+# type_specifier       -> INT | VOID | FLOAT
+# func_declaration     -> type_specifier ID ( params ) compound_statement
+# params               -> param_list | VOID
+# param_list           -> param_list , param | param
+# param                -> type_specifier ID | type_specifier ID [ ]
+# compound_statement   -> { local_declarations statement_list }
+# local_declarations   -> local_declarations var_declaration | EMPTY
+# statement_list       -> statement_list statement | EMPTY
+# statement            -> expression_statement | compound_statement | selection_statement | iteration_statement | return_statement
+# expression_statement -> expression ; | ;
+# selection_statement  -> IF ( expression ) statement | IF ( expression ) statement ELSE statement
+# iteration_statement  -> WHILE ( expression ) statement
+# return_statement     -> RETURN ; | RETURN expression ;
+# expression           -> var = expression | simple_expression
+# var                  -> ID | ID [ expression ]
+# simple_expression    -> additive_expression relop additive_expression | additive_expression
+# relop                -> <= | < | > | >= | == | !=
+# additive_expression  -> additive_expression addop term | term
+# addop                -> + | -
+# term                 -> term mulop factor | factor
+# mulop                -> * | /
+# factor               -> ( expression ) | var | call | NUM
+# call                 -> ID ( args )
+# args                 -> args_list | EMPTY
+# args_list            -> args_list , expression | expression
+
+The structure is has a module that defines the transitions between grammar rules called a2_transitions. Going to different transitions happens via a goto method. Also I created several very convienient methods like aceept and reject to match the language used in class.
