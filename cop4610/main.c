@@ -87,10 +87,11 @@ int main(int argc, char* argv[]) {
   int consumerChildren[atoi(argv[2])];
   int exitCode;
   int i;
+  printf("  pid\titem\tloc\tsem0\tsem1\tsem2\taction\ttot prod\ttot con\n");
 
   int producers = atoi(argv[1]);
   int consumers = atoi(argv[2]);
-  int numItmes = atoi(argv[3]);
+  int numItems = atoi(argv[3]);
 
   for(i = 0; i < producers; i++) {
     if((producerChildren[i] = fork()) == 0) { //child producers
@@ -99,7 +100,6 @@ int main(int argc, char* argv[]) {
       for(j = 0; j < atoi(argv[3]); j++) {
         synchronizedAccess(&produce, true, true);
       }
-      printf("producer exit\n");
       exit(0);
     }
   }
@@ -107,14 +107,10 @@ int main(int argc, char* argv[]) {
   for(i = 0; i < atoi(argv[2]); i++) {
     if((consumerChildren[i] = fork()) == 0) {
       // child
-      while(! isQueueEmpty()) {
+      int j ;
+      for(j = 0; j < producers*numItems; j++) {
         synchronizedAccess(&consume, true, false);
       }
-      usleep((100000000ULL * rand() / RAND_MAX)*2);
-      while(! isQueueEmpty()) {
-        synchronizedAccess(&consume, true, false);
-      }
-      printf("consumer exit\n");
       exit(0);
     }
   }
@@ -227,7 +223,17 @@ void produce() {
     produceLocation = produceLocation->next;
   }
   produceLocation->value = something;
-  printf("produced at %d\n", produceLocation->position);
+  (q+10)->value += 1;
+  printf("%7d%7d%7d%7d%7d%7d   produce %7d %14d\n",
+      getpid(),
+      produceLocation->value,
+      produceLocation->position,
+      semctl(semId, 0, GETVAL),
+      semctl(semId, 1, GETVAL) + 1,
+      semctl(semId, 2, GETVAL) + 1,
+      (q+10)->value,
+      (q+11)->value
+      );
 }
 
 /*
@@ -242,11 +248,11 @@ void consume() {
     consumeLocation->value = nothing;
   }
 
-  (q+10)->value += 1;
-  printf("%7d %7d %7d %7d %7d %7d   consume %7d %14d\n",
+  (q+11)->value += 1;
+  printf("%7d%7d%7d%7d%7d%7d   consume %7d %14d\n",
       getpid(),
       consumeLocation->value,
-      q,
+      consumeLocation->position,
       semctl(semId, 0, GETVAL),
       semctl(semId, 1, GETVAL) + 1,
       semctl(semId, 2, GETVAL) + 1,
