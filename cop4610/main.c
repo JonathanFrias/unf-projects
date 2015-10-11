@@ -29,7 +29,7 @@ struct queue* createQueue();
 void assertValidQueue();
 void assertCanProduce();
 void assertCanRemove();
-void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty);
+void synchronizedAccess(void (*function)(), bool randomAccessLock);
 void setup();
 void produce();
 void consume();
@@ -38,37 +38,31 @@ void assert(bool val, char*);
 int getSemVal(int semId, int semaphore);
 int canReadWrite();
 void semIncrBy(int semId, int semaphore, int delta);
-void printQueue();
+void printQueue(struct queue* toPrint);
+int isQueueFull();
+int isQueueEmpty();
+void assertFullQueue();
 
 struct queue* q;
 struct queue* produceLocation;
 struct queue* consumeLocation;
 int semId;
-key_t key = 680283; // Unique semaphore identifier
+key_t key = 680284; // Unique semaphore identifier
 int shared_mem_id; // Stores the unique identifier of the shared memory segment
 struct queue* shared_mem_ptr; // Stores the address of the shared memory segment
 
 void setup() {
-  if ((semId = semget(key, 3, 0600 | IPC_CREAT)) == -1) {
-    printf("Error creating semaphore set\n");
-    exit(11);
-  }
+  assert((semId = semget(key, 3, 0600 | IPC_CREAT)) != -1, "Error creating semaphore set\n");
 
   setSemVal(semId, 0, 0);
   setSemVal(semId, 1, 0);
   setSemVal(semId, 2, 0);
   // Create a segment of shared memory
-  if((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE, 0777)) == -1) {
-    printf("Error: Failed to Create Shared Memory Segment");
-    exit(12);
-  }
-  if((shared_mem_ptr = (struct queue*)shmat(shared_mem_id, (void *)0, 0)) == (void *)-1) {
-    printf("Error: Failed to Create Shared Memory Segment");
-    exit(9);
-  }
+  assert(((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE, 0777))) != -1, "Error: Failed to Create Shared Memory Segment");
+  assert((shared_mem_ptr = (struct queue*)shmat(shared_mem_id, (void *)0, 0)) != (void *)-1,
+    "Error: Failed to get Mmeory Segment Pointer");
 
   produceLocation = consumeLocation = q = createQueue(shared_mem_ptr);
-  return;
 }
 
 int main(int argc, char *argv[] ) {
@@ -79,50 +73,103 @@ int main(int argc, char *argv[] ) {
   // assertValidQueue();
   // assertCanProduce();
   // assertCanRemove();
+  // assertFullQueue();
+  // assertEmptyQueue();
 
-  int children[atoi(argv[1])];
+  int producerChildren[atoi(argv[1])];
+  int consumerChildren[atoi(argv[2])];
   int i;
+  printf("Parent: ");
+  printQueue(q);
   for(i = 0; i < atoi(argv[1]); i++) {
-    children[i] = 0;
-    if((children[i] = fork()) == 0) { //child producers
-      synchronizedAccess(&produce, false, false, false);
-      synchronizedAccess(&produce, false, false, false);
-      printf("  Child: ");
-      printQueue();
+    if((producerChildren[i] = fork()) == 0) { //child producers
+
+      int j;
+      for(j = 0; j < atoi(argv[3]); j++) {
+        synchronizedAccess(&produce, true);
+        printf("P Child: ");
+        printQueue(q);
+      }
+      printf("producer exit\n");
       exit(0);
-    } else { //parent
-      sleep(2);
-      printf("Parent: ");
-      printQueue();
     }
   }
+
+  for(i = 0; i < atoi(argv[2]); i++) {
+    if(consumerChildren[i] = fork() == 0) {
+      // child
+      while(! isQueueEmpty()) {
+        synchronizedAccess(&consume, true);
+      }
+      printf("C Child: ");
+      printQueue(q);
+      printf("child exit\n");
+      exit(0);
+    }
+  }
+  sleep(50);
+  printf("Parent: ");
+  printQueue(q);
+
   exit(0);
 }
 
-void printQueue() {
+void printQueue(struct queue* toPrint) {
   int i;
-  printf("{");
-  for( i = 0; i < ELEMENTS; i++ ){
-    struct queue* current = (shared_mem_ptr+(i*sizeof(struct queue)));
-    printf(" %d,", current->value);
+  printf("[\n");
+  struct queue* current = toPrint;
+  for( i = 0; i < ELEMENTS; i++ ) {
+    printf("    %lu: { value: %d,  nextPosition: %lu },\n", current, current->value, current->next);
+    current = current->next;
   }
-  printf(" }\n");
+  printf("]\n");
 }
 
 int canReadWrite() {
   return getSemVal(semId, 0) == getSemVal(semId, 1) == getSemVal(semId, 2) == 0;
 }
 
+int isQueueFull() {
+  int i = 0;
+  struct queue* current = q;
+  for(; i < ELEMENTS; i++) {
+    if(current->value == nothing) {
+      return 0;
+    }
+    current = current->next;
+  }
+  return 1;
+}
+
+int isQueueEmpty() {
+  int i = 0;
+  struct queue* current = q;
+  for(; i < ELEMENTS; i++) {
+    if(current->value == something) {
+      return 0;
+    }
+    current = current->next;
+  }
+  return 1;
+}
+
 /**
  * provides synchronizedAccess based on current semaphore lock values: randomAccessLock, isFull, isEmpty
  */
-void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, bool isEmpty) {
+void synchronizedAccess(void (*function)(), bool randomAccessLock) {
 
   if(randomAccessLock) {
     while(! canReadWrite()) {
-      sleep(1);
+      usleep(50);
     }
     semIncrBy(semId, 0, 1);
+
+    if(isQueueFull()) {
+      semIncrBy(semId, 1, 1);
+    }
+    if(isQueueEmpty()) {
+      semIncrBy(semId, 2, 1);
+    }
   }
 
   // call function
@@ -130,13 +177,20 @@ void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, 
 
   // decrement back to 0
   if(randomAccessLock) {
+    if(! isQueueFull()) {
+      setSemVal(semId, 1, 0);
+    }
+    if(! isQueueEmpty()) {
+      setSemVal(semId, 2, 0);
+    }
+
     semIncrBy(semId, 0, -1);
   }
 }
 
 void semIncrBy(int semId, int semaphore, int delta) {
   struct sembuf data = {semaphore, delta, 0};
-	semop(semId, &data, 1); // Update the selected semaphore (increment/decrement)
+  semop(semId, &data, 1); // Update the selected semaphore (increment/decrement)
 }
 
 int getSemVal(int semId, int semaphore) {
@@ -151,11 +205,10 @@ void setSemVal(int semId, int semaphore, int value) {
 }
 
 void assertCanRemove() {
-  setup();
   produce();
   produce();
   assert(q->value==something, "Production failed!");
-  synchronizedAccess(&consume, false, false, false);
+  synchronizedAccess(&consume, false);
   assert(q->value == nothing, "Queue must have values initialized to nothing!");
   assert(q->next == consumeLocation, "The consumeLocation was not set after consume");
 }
@@ -168,13 +221,11 @@ void assert(bool val, char* msg) {
 }
 
 void assertCanProduce() {
-  synchronizedAccess(&produce, false, false, false);
+  synchronizedAccess(&produce, false);
 
-  if(q->value != something) {
-    printf("syncronized produce failed!");
-    exit(6);
-  }
+  assert(q->value == something, "syncronized produce failed!");
   assert(q->next == produceLocation, "produce was not correct!");
+  assert(q->next->position == produceLocation->position, "produce was not correct!");
 }
 
 /**
@@ -187,10 +238,13 @@ void produce() {
   }
   produceLocation->value = something;
 
+  int i = 0;
   // find next available produceLocation.
   // Although, it **SHOULD** always just be the next element
-  while(produceLocation->value == something) {
+  while(produceLocation->value == something && i < 12) {
     produceLocation = produceLocation->next;
+    usleep(900);
+    i += 1;
   }
 }
 
@@ -203,11 +257,14 @@ void consume() {
     exit(7);
   }
   consumeLocation->value = nothing;
+  printf("consumed '%d'\n", consumeLocation->position);
 
-  while(consumeLocation->value == nothing) {
+  int i = 0;
+  while(consumeLocation->value == nothing && i < 12) {
     consumeLocation = consumeLocation->next;
+    usleep(900);
+    i += 1;
   }
-  assert(consumeLocation == q->next, "Consume location was not set properly");
 }
 
 /*
@@ -218,15 +275,17 @@ void consume() {
 struct queue* createQueue(struct queue* first) {
   struct queue* current = first;
   int i;
-  for(i = 0; i < ELEMENTS-1; i++) {
-    current->next = first + (i * sizeof(struct queue)) + sizeof(struct queue);
+  for(i = 0; i < ELEMENTS; i++) {
+    current->next = first + i + 1;
     current->position = i;
-    current->value = nothing;
+
+    if(i == ELEMENTS-1) {
+      current->next = first;
+    }
     current = current->next;
   }
 
-  // circular linked list. Last next pointer goes to the first one! :D
-  current->next = first;
+  assert(current == first, "Queue is not circular");
   return first;
 }
 
@@ -240,26 +299,28 @@ void assertValidQueue() {
   struct queue* first = q;
   struct queue* current = first;
 
-  // test that queue is cirular and has ELEMENTS elements
-  assert(q
-      ->next
-      ->next
-      ->next
-      ->next
-      ->next
-      ->next
-      ->next
-      ->next
-      ->next
-      ->next == q,
-      "Queue is not circular or does not contain 10 items!"
-      );
+  assert((q+9)->next == q, "Queue is not circular or does not contain 10 items!");
 
   for(i = 0; i < ELEMENTS; i++) {
-    if(current->value != nothing) {
-      printf("All entries should be initialized to nothing");
-      exit(2);
-    }
+    assert(current->value == nothing, "All entries should be initialized to nothing");
+    assert(current->position == i, "Position is not correct");
     current = current->next;
   }
+}
+
+void assertFullQueue() {
+  // fill queue
+  int i;
+  if(fork() == 0) {
+    for(i = 0; i < ELEMENTS; i++) {
+      synchronizedAccess(&produce, true);
+      printQueue(q);
+      sleep(1);
+    }
+    exit(0);
+  }
+  sleep(10);
+  printQueue(q);
+  // test that isFullQueue is true!
+  assert(isQueueFull() == 1, "Queue expected to report full!");
 }
