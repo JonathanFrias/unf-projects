@@ -72,8 +72,11 @@ void setup() {
   return;
 }
 
-int main() {
+int main(int argc, char *argv[] ) {
+  assert(argc == 4, "You must provide producers, consumers, and an amount of elements to generate");
+
   setup();
+  // Test the queue structure
   // assertValidQueue();
   // assertCanProduce();
   // assertCanRemove();
@@ -152,15 +155,15 @@ void assertCanRemove() {
   setup();
   produce();
   produce();
-  assert(q->value==something);
+  assert(q->value==something, "Production failed!");
   synchronizedAccess(&consume, false, false, false);
-  assert(q->value == nothing);
-  assert(q->next == consumeLocation);
+  assert(q->value == nothing, "Queue must have values initialized to nothing!");
+  assert(q->next == consumeLocation, "The consumeLocation was not set after consume");
 }
 
-void assert(bool val) {
+void assert(bool val, char* msg) {
   if(!val) {
-    printf("assertion failed!");
+    printf("assertion failed: %s\n", msg);
     exit(5);
   }
 }
@@ -172,7 +175,7 @@ void assertCanProduce() {
     printf("syncronized produce failed!");
     exit(6);
   }
-  assert(q->next == produceLocation);
+  assert(q->next == produceLocation, "produce was not correct!");
 }
 
 /**
@@ -205,7 +208,7 @@ void consume() {
   while(consumeLocation->value == nothing) {
     consumeLocation = consumeLocation->next;
   }
-  assert(consumeLocation == q->next);
+  assert(consumeLocation == q->next, "Consume location was not set properly");
 }
 
 /*
@@ -249,7 +252,9 @@ void assertValidQueue() {
       ->next
       ->next
       ->next
-      ->next == q);
+      ->next == q,
+      "Queue is not circular or does not contain 10 items!"
+      );
 
   for(i = 0; i < ELEMENTS; i++) {
     if(current->value != nothing) {
