@@ -8,6 +8,7 @@
 #include <sys/sem.h>
 #include <sys/ipc.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define ELEMENTS 10
 #define QUEUE_SIZE sizeof(struct queue) * ELEMENTS
@@ -29,14 +30,13 @@ struct queue* createQueue();
 void assertValidQueue();
 void assertCanProduce();
 void assertCanRemove();
-void synchronizedAccess(void (*function)(), bool randomAccessLock);
+void synchronizedAccess(void (*function)(), bool randomAccessLock, bool produce);
 void setup();
 void produce();
 void consume();
 void setSemVal(int semId, int semaphore, int value);
 void assert(bool val, char*);
 int getSemVal(int semId, int semaphore);
-int canReadWrite();
 void semIncrBy(int semId, int semaphore, int delta);
 void printQueue(struct queue* toPrint);
 int isQueueFull();
@@ -47,12 +47,15 @@ struct queue* q;
 struct queue* produceLocation;
 struct queue* consumeLocation;
 int semId;
-key_t key = 680284; // Unique semaphore identifier
+int semId2;
+key_t key = 680283; // Unique semaphore identifier
+key_t key2 = 680284; // Unique semaphore identifier
 int shared_mem_id; // Stores the unique identifier of the shared memory segment
 struct queue* shared_mem_ptr; // Stores the address of the shared memory segment
 
 void setup() {
   assert((semId = semget(key, 3, 0600 | IPC_CREAT)) != -1, "Error creating semaphore set\n");
+  assert((semId2 = semget(key2, 2, 0600 | IPC_CREAT)) != -1, "Error creating semaphore set\n");
 
   setSemVal(semId, 0, 0);
   setSemVal(semId, 1, 0);
@@ -60,12 +63,16 @@ void setup() {
   // Create a segment of shared memory
   assert(((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE, 0777))) != -1, "Error: Failed to Create Shared Memory Segment");
   assert((shared_mem_ptr = (struct queue*)shmat(shared_mem_id, (void *)0, 0)) != (void *)-1,
+    "Error: Failed to get Memeory Segment Pointer");
+  assert(((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE, 0777))) != -1, "Error: Failed to Create Shared Memory Segment");
+  assert((shared_mem_ptr = (struct queue*)shmat(shared_mem_id, (void *)0, 0)) != (void *)-1,
     "Error: Failed to get Mmeory Segment Pointer");
 
   produceLocation = consumeLocation = q = createQueue(shared_mem_ptr);
 }
 
-int main(int argc, char *argv[] ) {
+int main(int argc, char* argv[]) {
+  shmctl(shared_mem_id, IPC_RMID, 0);
   assert(argc == 4, "You must provide producers, consumers, and an amount of elements to generate");
 
   setup();
@@ -78,6 +85,7 @@ int main(int argc, char *argv[] ) {
 
   int producerChildren[atoi(argv[1])];
   int consumerChildren[atoi(argv[2])];
+  int exitCode;
   int i;
   printf("Parent: ");
   printQueue(q);
@@ -86,9 +94,7 @@ int main(int argc, char *argv[] ) {
 
       int j;
       for(j = 0; j < atoi(argv[3]); j++) {
-        synchronizedAccess(&produce, true);
-        printf("P Child: ");
-        printQueue(q);
+        synchronizedAccess(&produce, true, true);
       }
       printf("producer exit\n");
       exit(0);
@@ -99,18 +105,29 @@ int main(int argc, char *argv[] ) {
     if(consumerChildren[i] = fork() == 0) {
       // child
       while(! isQueueEmpty()) {
-        synchronizedAccess(&consume, true);
+        synchronizedAccess(&consume, true, false);
       }
-      printf("C Child: ");
-      printQueue(q);
-      printf("child exit\n");
+      usleep((100000000ULL * rand() / RAND_MAX)*2);
+      while(! isQueueEmpty()) {
+        synchronizedAccess(&consume, true, false);
+      }
+      printf("consumer exit\n");
       exit(0);
     }
   }
-  sleep(50);
+
+  for(i = 0 ; i < atoi(argv[1]); i++) {
+    waitpid(producerChildren[i], &exitCode, 0);
+  }
+  for(i = 0 ; i < atoi(argv[2]); i++) {
+    waitpid(consumerChildren[i], &exitCode, 0);
+  }
   printf("Parent: ");
   printQueue(q);
 
+  shmctl(shared_mem_id, IPC_RMID, 0);
+  shmctl(semId, IPC_RMID, 0);
+  shmctl(semId2, IPC_RMID, 0);
   exit(0);
 }
 
@@ -123,10 +140,6 @@ void printQueue(struct queue* toPrint) {
     current = current->next;
   }
   printf("]\n");
-}
-
-int canReadWrite() {
-  return getSemVal(semId, 0) == getSemVal(semId, 1) == getSemVal(semId, 2) == 0;
 }
 
 int isQueueFull() {
@@ -156,35 +169,56 @@ int isQueueEmpty() {
 /**
  * provides synchronizedAccess based on current semaphore lock values: randomAccessLock, isFull, isEmpty
  */
-void synchronizedAccess(void (*function)(), bool randomAccessLock) {
+void synchronizedAccess(void (*function)(), bool randomAccessLock, bool produce) {
 
   if(randomAccessLock) {
-    while(! canReadWrite()) {
-      usleep(50);
+    if (getSemVal(semId, 0) == 0 ) {
+      semIncrBy(semId, 0, 1);
+      usleep(100000000ULL * rand() / RAND_MAX);
+      if(getSemVal(semId, 0) != 1) {
+        semIncrBy(semId, 0, -1);
+        printf("Problem locking\n");
+        usleep(100000000ULL * rand() / RAND_MAX);
+        return synchronizedAccess(function, randomAccessLock, produce);
+      }
     }
-    semIncrBy(semId, 0, 1);
 
     if(isQueueFull()) {
       semIncrBy(semId, 1, 1);
+      if(produce) {
+        semIncrBy(semId, 0, -1);
+        usleep(100000000ULL * rand() / RAND_MAX);
+        return synchronizedAccess(function, randomAccessLock, produce);
+      }
     }
+
     if(isQueueEmpty()) {
       semIncrBy(semId, 2, 1);
+      if(!produce) {
+        semIncrBy(semId, 0, -1);
+        usleep(100000000ULL * rand() / RAND_MAX);
+        return synchronizedAccess(function, randomAccessLock, produce);
+      }
     }
-  }
 
-  // call function
-  (*function)();
+    // call function
+    (*function)();
+    printQueue(q);
 
-  // decrement back to 0
-  if(randomAccessLock) {
+    // decrement back to 0
     if(! isQueueFull()) {
       setSemVal(semId, 1, 0);
     }
     if(! isQueueEmpty()) {
       setSemVal(semId, 2, 0);
     }
-
-    semIncrBy(semId, 0, -1);
+    if(getSemVal(semId, 0) != 1) {
+      printf("problem unlocking\n");
+      setSemVal(semId, 0, 0);
+    }
+  } else {
+    usleep(100000000ULL * rand() / RAND_MAX);
+    return synchronizedAccess(function, randomAccessLock, produce);
   }
 }
 
@@ -208,7 +242,7 @@ void assertCanRemove() {
   produce();
   produce();
   assert(q->value==something, "Production failed!");
-  synchronizedAccess(&consume, false);
+  synchronizedAccess(&consume, false, false);
   assert(q->value == nothing, "Queue must have values initialized to nothing!");
   assert(q->next == consumeLocation, "The consumeLocation was not set after consume");
 }
@@ -221,7 +255,7 @@ void assert(bool val, char* msg) {
 }
 
 void assertCanProduce() {
-  synchronizedAccess(&produce, false);
+  synchronizedAccess(&produce, false, true);
 
   assert(q->value == something, "syncronized produce failed!");
   assert(q->next == produceLocation, "produce was not correct!");
@@ -232,38 +266,26 @@ void assertCanProduce() {
  * Produce using the global produceLocation variable.
  */
 void produce() {
-  if(produceLocation->value != nothing) {
-    printf("cannot produce item at position %d that already exists!", produceLocation->position);
-    exit(4);
+  // find next available produceLocation.
+  while(produceLocation->value == something) {
+    produceLocation = produceLocation->next;
   }
   produceLocation->value = something;
-
-  int i = 0;
-  // find next available produceLocation.
-  // Although, it **SHOULD** always just be the next element
-  while(produceLocation->value == something && i < 12) {
-    produceLocation = produceLocation->next;
-    usleep(900);
-    i += 1;
-  }
+  semIncrBy(semId2, 1, 1);
+  printf("%d\ t");
 }
 
 /*
  * This function is the inverse of produce().
  */
 void consume() {
-  if(consumeLocation->value != something) {
-    printf("cannot remove nothing from item at position %d that already exists!", consumeLocation->position);
-    exit(7);
-  }
-  consumeLocation->value = nothing;
-  printf("consumed '%d'\n", consumeLocation->position);
-
   int i = 0;
-  while(consumeLocation->value == nothing && i < 12) {
+  while(consumeLocation->value == nothing && !isQueueEmpty()) {
     consumeLocation = consumeLocation->next;
-    usleep(900);
-    i += 1;
+  }
+  if(consumeLocation->value == something) {
+    consumeLocation->value = nothing;
+    semIncrBy(semId2, 0, 1);
   }
 }
 
@@ -313,7 +335,7 @@ void assertFullQueue() {
   int i;
   if(fork() == 0) {
     for(i = 0; i < ELEMENTS; i++) {
-      synchronizedAccess(&produce, true);
+      synchronizedAccess(&produce, true, true);
       printQueue(q);
       sleep(1);
     }
