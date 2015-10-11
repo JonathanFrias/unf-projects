@@ -66,6 +66,9 @@ void setup() {
     "Error: Failed to get Memeory Segment Pointer");
 
   produceLocation = consumeLocation = q = createQueue(shared_mem_ptr);
+  (q+10)->value = 0;
+  (q+11)->value = 0;
+  (q+12)->value = 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -84,7 +87,6 @@ int main(int argc, char* argv[]) {
   int consumerChildren[atoi(argv[2])];
   int exitCode;
   int i;
-  printf("Parent: ");
 
   int producers = atoi(argv[1]);
   int consumers = atoi(argv[2]);
@@ -238,16 +240,18 @@ void consume() {
   }
   if(consumeLocation->value == something) {
     consumeLocation->value = nothing;
-    printf("consumed at %d\n", consumeLocation->position);
   }
 
-  printf("%7-d %7-d %7-d %7-d %7-d %7-dconsume %7d %14d\n",
+  (q+10)->value += 1;
+  printf("%7d %7d %7d %7d %7d %7d   consume %7d %14d\n",
       getpid(),
       consumeLocation->value,
       q,
       semctl(semId, 0, GETVAL),
       semctl(semId, 1, GETVAL) + 1,
-      semctl(semId, 2, GETVAL) + 1
+      semctl(semId, 2, GETVAL) + 1,
+      (q+10)->value,
+      (q+11)->value
   );
 }
 
