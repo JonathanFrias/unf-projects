@@ -93,6 +93,7 @@ int main( int argc, char *argv[] ) {
   printf("Process ID\tNew Product\tAddress\t\t\tAccess\t\tEmpty\t\tOccupied\tAction\t\tTotal Produced\t\tTotal Consumed\n");
   //for creating producers
   for(int i = 0; i < numProducers; i++){
+	  *producerCount ++;
 	  if ((producerIds[i] = fork()) == 0){
 		for(int j = 0;j < producersRange;j++){
 			produce(semId);
@@ -102,19 +103,20 @@ int main( int argc, char *argv[] ) {
   //for creating consumers
   for(int i = 0; i < numConsumers; i++){
 	  if ((consumerIds[i] = fork()) == 0){
-		  *producerCount ++;
+		  *consumerCount ++;
 			consume(semId);
 	  }
   }
   //wait for parent to complete
   //for creating producers
   for(int i = 0; i < numProducers; i++){
+	  *producerCount --;
 	  if ((waitpid(producerIds[i], &status, 0) == -1))
 		printf("\nError Waiting for Producer to Terminate\n"), exit(1);
   }
   //for creating consumers
   for(int i = 0; i < numConsumers; i++){
-	  *consumerCount ++;
+	  *consumerCount --;
 	  if ((waitpid(consumerIds[i], &status, 0) == -1))
 		printf("\nError Waiting for Consumer to Terminate\n"), exit(1);
   }
