@@ -34,21 +34,22 @@ void setup();
 void produce();
 void consume();
 void setSemVal(int semId, int semaphore, int value);
-void assert(bool val);
+void assert(bool val, char*);
 int getSemVal(int semId, int semaphore);
 int canReadWrite();
 void semIncrBy(int semId, int semaphore, int delta);
+struct queue* getSharedQueue();
+void printQueue();
 
 struct queue* q;
 struct queue* produceLocation;
 struct queue* consumeLocation;
 int semId;
 key_t key = 680283; // Unique semaphore identifier
-int shared_mem_id, // Stores the unique identifier of the shared memory segment
-    *shared_mem_ptr; // Stores the address of the shared memory segment
+int shared_mem_id; // Stores the unique identifier of the shared memory segment
+struct queue* shared_mem_ptr; // Stores the address of the shared memory segment
 
 void setup() {
-  produceLocation = consumeLocation = q = createQueue();
   if ((semId = semget(key, 3, 0600 | IPC_CREAT)) == -1) {
     printf("Error creating semaphore set\n");
     exit(11);
@@ -62,10 +63,13 @@ void setup() {
     printf("Error: Failed to Create Shared Memory Segment");
     exit(12);
   }
-  if((shared_mem_ptr = (int *)shmat(shared_mem_id, (void *)0, 0)) == (void *)-1) {
+  if((shared_mem_ptr = (struct queue*)shmat(shared_mem_id, (void *)0, 0)) == (void *)-1) {
     printf("Error: Failed to Create Shared Memory Segment");
     exit(9);
   }
+
+  produceLocation = consumeLocation = q = createQueue(shared_mem_ptr);
+  return;
 }
 
 int main() {
@@ -74,12 +78,37 @@ int main() {
   // assertCanProduce();
   // assertCanRemove();
 
-  synchronizedAccess(&produce, true, false, false);
+  int children[atoi(argv[1])];
+  int i;
+  for(i = 0; i < atoi(argv[1]); i++) {
+    children[i] = 0;
+    if((children[i] = fork()) == 0) { //child producers
+      synchronizedAccess(&produce, false, false, false);
+      synchronizedAccess(&produce, false, false, false);
+      printf("  Child: ");
+      printQueue();
+      exit(0);
+    } else { //parent
+      sleep(2);
+      printf("Parent: ");
+      printQueue();
+    }
+  }
   exit(0);
 }
 
+void printQueue() {
+  int i;
+  printf("{");
+  for( i = 0; i < ELEMENTS; i++ ){
+    struct queue* current = (shared_mem_ptr+(i*sizeof(struct queue)));
+    printf(" %d,", current->value);
+  }
+  printf(" }\n");
+}
+
 int canReadWrite() {
-  return (int) getSemVal(semId, 0) == getSemVal(semId, 1) == getSemVal(semId, 2) == 0;
+  return getSemVal(semId, 0) == getSemVal(semId, 1) == getSemVal(semId, 2) == 0;
 }
 
 /**
@@ -98,7 +127,9 @@ void synchronizedAccess(void (*function)(), bool randomAccessLock, bool isFull, 
   (*function)();
 
   // decrement back to 0
-  semIncrBy(semId, 0, -1);
+  if(randomAccessLock) {
+    semIncrBy(semId, 0, -1);
+  }
 }
 
 void semIncrBy(int semId, int semaphore, int delta) {
@@ -182,21 +213,19 @@ void consume() {
  * Although technically, it just returns a
  * pointer the first element to the LinkedList queue.
  */
-struct queue* createQueue() {
-  struct queue* result = (struct queue*) malloc(QUEUE_SIZE);
-
-  struct queue* current = result;
+struct queue* createQueue(struct queue* first) {
+  struct queue* current = first;
   int i;
-  for(i = 0; i < ELEMENTS; i++) {
-    current->next = result + (i * sizeof(struct queue));
+  for(i = 0; i < ELEMENTS-1; i++) {
+    current->next = first + (i * sizeof(struct queue)) + sizeof(struct queue);
     current->position = i;
     current->value = nothing;
     current = current->next;
   }
 
   // circular linked list. Last next pointer goes to the first one! :D
-  current->next = result;
-  return result;
+  current->next = first;
+  return first;
 }
 
 /*
