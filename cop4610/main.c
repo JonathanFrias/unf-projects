@@ -38,7 +38,6 @@ void assert(bool val, char*);
 int getSemVal(int semId, int semaphore);
 int canReadWrite();
 void semIncrBy(int semId, int semaphore, int delta);
-struct queue* getSharedQueue();
 void printQueue();
 
 struct queue* q;
