@@ -13,4 +13,5 @@ Difficulties:
 We had issues understanding loading the queue plus the COUNTERS into shared memory but moving the pointer was the fix
 Another stupid issue we should have caught was that one consumer was eating all the items. this was do to one of our for loops
 statements being incorrect.
+Sharing code thanks to Naga's unfimilarity with github's standards
 the semaphore stuff was pretty easy thanks to all the support files given to us by Jim Littlton. 
