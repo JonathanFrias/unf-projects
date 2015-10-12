@@ -1,2 +1,2 @@
 p1: main.c
-  gcc main.c -o p1
+	gcc main.c -std=c11 -o p1
