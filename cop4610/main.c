@@ -112,8 +112,6 @@ int main(int argc, char* argv[]) {
       for(j = 0; j < producers*numItems; j++) {
         synchronizedAccess(&consume, true, false);
       }
-	  printf("\nexited %d of %d consumers\n", i,atoi(argv[2]));
-	  waitpid(consumerChildren[i], &exitCode, 0);
       exit(0);
     }
   }
@@ -160,9 +158,8 @@ int isQueueEmpty() {
  */
 void synchronizedAccess(void (*function)(), bool randomAccessLock, bool produce) {
   if(produce) {
-    semIncrBy(semId, PRODUCER, -1);
-    semIncrBy(semId, CRITICAL, -1);
-
+	semIncrBy(semId, PRODUCER, -1);
+	semIncrBy(semId, CRITICAL, -1);
     (*function)(); // produce or consume
 
     semIncrBy(semId, CRITICAL, 1);
