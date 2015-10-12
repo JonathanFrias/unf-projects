@@ -93,39 +93,45 @@ int main(int argc, char* argv[]) {
   int producers = atoi(argv[1]);
   int consumers = atoi(argv[2]);
   int numItems = atoi(argv[3]);
+  int minPerConsumer = (producers*numItems)/consumers;
+  int numExtraItems = (producers*numItems)%consumers;
 
   for(i = 0; i < producers; i++) {
     if((producerChildren[i] = fork()) == 0) { //child producers
 
       int j;
-      for(j = 0; j < atoi(argv[3]); j++) {
+      for(j = 0; j < numItems; j++) {
         synchronizedAccess(&produce, true, true);
       }
       exit(0);
     }
   }
 
-  for(i = 0; i < atoi(argv[2]); i++) {
+  for(i = 0; i < consumers; i++) {
     if((consumerChildren[i] = fork()) == 0) {
       // child
-      int j ;
-      for(j = 0; j < producers*numItems; j++) {
+      for(int j = 0; j < minPerConsumer; j++) {
         synchronizedAccess(&consume, true, false);
+      }
+      if(i == consumers-1){
+	for(int j = 0; j < numExtraItems; j++) {
+         synchronizedAccess(&consume, true, false);
+        }
       }
       exit(0);
     }
   }
   for(i = 0; i < producers; i++) {
-	  printf("\nexited %d of %d producers\n", i,producers);
+	  //printf("\nexited %d of %d producers\n", i+1,producers);
 	  waitpid(producerChildren[i], &exitCode, 0);
   }
   for(i = 0; i < consumers; i++) {
-	  printf("\nexited %d of %d consumers\n", i,consumers);
+	  //printf("\nexited %d of %d consumers\n", i+1,consumers);
 	  waitpid(consumerChildren[i], &exitCode, 0);
   }
-  shmctl(shared_mem_id, IPC_RMID, 0);
   semctl(semId, IPC_RMID, 0);
-  printf("finished");
+  shmctl(shared_mem_id, IPC_RMID, 0);
+  printf("finished\n");
   return 0;
 }
 
