@@ -73,6 +73,7 @@ void setup() {
 
 int main(int argc, char* argv[]) {
   shmctl(shared_mem_id, IPC_RMID, 0);
+  semctl(semId, IPC_RMID, 0);
   assert(argc == 4, "You must provide producers, consumers, and an amount of elements to generate");
 
   setup();
@@ -111,17 +112,19 @@ int main(int argc, char* argv[]) {
       for(j = 0; j < producers*numItems; j++) {
         synchronizedAccess(&consume, true, false);
       }
+	  printf("\nexited %d of %d consumers\n", i,atoi(argv[2]));
+	  waitpid(consumerChildren[i], &exitCode, 0);
       exit(0);
     }
   }
-
-  for(i = 0 ; i < atoi(argv[1]); i++) {
-    waitpid(producerChildren[i], &exitCode, 0);
+  for(i = 0; i < producers; i++) {
+	  printf("\nexited %d of %d producers\n", i,producers);
+	  waitpid(producerChildren[i], &exitCode, 0);
   }
-  for(i = 0 ; i < atoi(argv[2]); i++) {
-    waitpid(consumerChildren[i], &exitCode, 0);
+  for(i = 0; i < consumers; i++) {
+	  printf("\nexited %d of %d consumers\n", i,consumers);
+	  waitpid(consumerChildren[i], &exitCode, 0);
   }
-
   shmctl(shared_mem_id, IPC_RMID, 0);
   semctl(semId, IPC_RMID, 0);
   printf("finished");
