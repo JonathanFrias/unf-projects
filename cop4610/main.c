@@ -1,9 +1,3 @@
-/*
- * main.c
- * Authored By: Johnathan Frias and Nagavarun Kanaparthy
- * Date: 10/10/2015
- * 
- */
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -11,8 +5,16 @@
 #include <string.h>
 #include <sys/shm.h>
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/ipc.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define ELEMENTS 10
+#define QUEUE_SIZE sizeof(struct queue) * ELEMENTS
+#define CRITICAL 0
+#define PRODUCER 1
+#define CONSUMER 2
 
 struct queue {
   int value;
@@ -26,238 +28,237 @@ enum states {
   queueFull,
   queueEmpty,
 };
-//queque Commands
+
 struct queue* createQueue();
-void addItem(int semSetId);
-void removeItem(int semSetId);
-//producer and consumer functions
-void produce(int semSetId);
-void consume(int semSetId);
-//Semaphore Methods
-void intializeSems(int semSetId);
-//Sempahores Permit, Release, and Check functions
-//access
-void queueAccessPermit(int semSetdId);
-void queueAccessRelease(int semSetdId);
-int queueAccessCheck(int semSetdId);
-//addition
-void queueAdditionPermit(int semSetdId);
-void queueAdditionRelease(int semSetdId);
-int queueAdditionCheck(int semSetdId);
-//removal
-void queueRemovalPermit(int semSetdId);
-void queueRemovalRelease(int semSetdId);
-int queueRemovalCheck(int semSetdId);
-//clean up
-void releaseSharedResources(int semIds[], int shmIds[]);
-void assert(bool val);
+void assertValidQueue();
+void assertCanProduce();
+void assertCanRemove();
+void synchronizedAccess(void (*function)(), bool randomAccessLock, bool produce);
+void setup();
+void produce();
+void consume();
+void setSemVal(int semId, int semaphore, int value);
+void assert(bool val, char*);
+int getSemVal(int semId, int semaphore);
+void semIncrBy(int semId, int semaphore, int delta);
+int isQueueFull();
+int isQueueEmpty();
+void assertFullQueue();
 
 struct queue* q;
-int* producerCount;
-int* consumerCount;
+struct queue* produceLocation;
+struct queue* consumeLocation;
+int semId;
+key_t key = 680283; // Unique semaphore identifier
+key_t key2 = 680284; // Unique semaphore identifier
+int shared_mem_id; // Stores the unique identifier of the shared memory segment
+struct queue* shared_mem_ptr; // Stores the address of the shared memory segment
 
-int main( int argc, char *argv[] ) {
-  //Ids and Keys
-  int key = 680283;
-  int semId;
-  int qId;
-  int pCountId;
-  int cCountId;
-  int status;
-  //Commandline values
-  int numProducers = atoi(argv[1]);
-  int numConsumers = atoi(argv[2]);
-  int producersRange = atoi(argv[3]);  
-  //Producer and Consumer ids;
-  int producerIds[numProducers];
-  int consumerIds[numConsumers];
-  //load queque and sembufs controls
-  //load queque in Shared Memory
-  if((qId = shmget(IPC_PRIVATE, 10*sizeof(struct queue), 0777)) == -1)
-		printf("/nError: Failed to Create Shared Memory Segment/n"), exit(1);
-  q = shmat(qId, NULL, 0);
-  q = createQueue();
-  //load count variables into Shared Memory
-  if((pCountId = shmget(IPC_PRIVATE, sizeof(int), 0777)) == -1)
-		printf("/nError: Failed to Create Shared Memory Segment/n"), exit(1);
-  producerCount = shmat(pCountId, NULL, 0);
-  if((cCountId = shmget(IPC_PRIVATE, sizeof(int), 0777)) == -1)
-		printf("/nError: Failed to Create Shared Memory Segment/n"), exit(1);
-  consumerCount = shmat(cCountId, NULL, 0);
-  //create semaphore set 
-  if ((semId = semget(key, 3, IPC_CREAT | 0600)) == -1) {
-    printf("Failed");
-  }
-  //intialize semaphores
-  intializeSems(semId);
-  printf("Process ID\tNew Product\tAddress\t\t\tAccess\t\tEmpty\t\tOccupied\tAction\t\tTotal Produced\t\tTotal Consumed\n");
-  //for creating producers
-  for(int i = 0; i < numProducers; i++){
-	  *producerCount ++;
-	  if ((producerIds[i] = fork()) == 0){
-		for(int j = 0;j < producersRange;j++){
-			produce(semId);
-		}
-	  }
-  }
-  //for creating consumers
-  for(int i = 0; i < numConsumers; i++){
-	  if ((consumerIds[i] = fork()) == 0){
-		  *consumerCount ++;
-			consume(semId);
-	  }
-  }
-  //wait for parent to complete
-  //for creating producers
-  for(int i = 0; i < numProducers; i++){
-	  *producerCount --;
-	  if ((waitpid(producerIds[i], &status, 0) == -1))
-		printf("\nError Waiting for Producer to Terminate\n"), exit(1);
-  }
-  //for creating consumers
-  for(int i = 0; i < numConsumers; i++){
-	  *consumerCount --;
-	  if ((waitpid(consumerIds[i], &status, 0) == -1))
-		printf("\nError Waiting for Consumer to Terminate\n"), exit(1);
-  }
-  //clean up
-  int shmIds[] = {qId,pCountId,cCountId};
-  int semIds[] = {semId};
-  releaseSharedResources(semIds , shmIds);
-  exit(0);
+void setup() {
+  assert((semId = semget(key, 3, 0600 | IPC_CREAT)) != -1, "Error creating semaphore set\n");
+
+  setSemVal(semId, 0, 1);
+  setSemVal(semId, 1, 9);
+  setSemVal(semId, 2, 0);
+  // Create a segment of shared memory
+  assert(((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE+4, 0777))) != -1, "Error: Failed to Create Shared Memory Segment");
+  assert((shared_mem_ptr = (struct queue*)shmat(shared_mem_id, (void *)0, 0)) != (void *)-1,
+    "Error: Failed to get Memeory Segment Pointer");
+
+  produceLocation = consumeLocation = q = createQueue(shared_mem_ptr);
+  (q+10)->value = 0;
+  (q+11)->value = 0;
+  (q+12)->value = 0;
 }
-void intializeSems(int semSetId){
-	//Initial value for semaphores
-	// Initialize semaphore in the set (sem_0)
-	/**
-	 * sem0 – Controls access to the critical space
-	 *  1 – A producer/consumer can access the critical space
-	 *	0 – A producer/consumer is blocked until the critical space is accessible
-	 */
-    if (semctl(semSetId, 0, SETVAL, 1) == -1) {
-        printf("\nError initializing semaphore %d with value %d\n", 0, 1);
-        exit(1);
+
+int main(int argc, char* argv[]) {
+  shmctl(shared_mem_id, IPC_RMID, 0);
+  assert(argc == 4, "You must provide producers, consumers, and an amount of elements to generate");
+
+  setup();
+  // Test the queue structure
+  // assertValidQueue();
+  // assertCanProduce();
+  // assertCanRemove();
+  // assertFullQueue();
+  // assertEmptyQueue();
+
+  int producerChildren[atoi(argv[1])];
+  int consumerChildren[atoi(argv[2])];
+  int exitCode;
+  int i;
+  printf("  pid\titem\tloc\tsem0\tsem1\tsem2\taction\ttot prod\ttot con\n");
+
+  int producers = atoi(argv[1]);
+  int consumers = atoi(argv[2]);
+  int numItems = atoi(argv[3]);
+
+  for(i = 0; i < producers; i++) {
+    if((producerChildren[i] = fork()) == 0) { //child producers
+
+      int j;
+      for(j = 0; j < atoi(argv[3]); j++) {
+        synchronizedAccess(&produce, true, true);
+      }
+      exit(0);
     }
-	// Initialize semaphore in the set (sem_1)
-	/**
-	 * sem1 – IsFull flag for producers
-	 * > 0 – The queue is not full, and a producer can add an item
-	 * 0 – The queue is full, and a producer is blocked until the queue is no longer full
-	 */
-    if (semctl(semSetId, 1, SETVAL, 10) == -1) {
-        printf("\nError initializing semaphore %d with value %d\n", 0, 9);
-        exit(1);
+  }
+
+  for(i = 0; i < atoi(argv[2]); i++) {
+    if((consumerChildren[i] = fork()) == 0) {
+      // child
+      int j ;
+      for(j = 0; j < producers*numItems; j++) {
+        synchronizedAccess(&consume, true, false);
+      }
+      exit(0);
     }
-	// Initialize semaphore in the set (sem_2)
-	/**
-	 * sem2 – IsEmpty flag for consumers
-	 * > 0 – The queue is not empty, and a consumer can remove an item
-	 * 0 – The queue is empty, and a consumer is blocked until the queue is no longer empty
-	 */
-    if (semctl(semSetId, 2, SETVAL, 0) == -1) {
-        printf("\nError initializing semaphore %d with value %d\n", 0, 0);
-        exit(1);
+  }
+
+  for(i = 0 ; i < atoi(argv[1]); i++) {
+    waitpid(producerChildren[i], &exitCode, 0);
+  }
+  for(i = 0 ; i < atoi(argv[2]); i++) {
+    waitpid(consumerChildren[i], &exitCode, 0);
+  }
+
+  shmctl(shared_mem_id, IPC_RMID, 0);
+  semctl(semId, IPC_RMID, 0);
+  printf("finished");
+  return 0;
+}
+
+int isQueueFull() {
+  int i = 0;
+  struct queue* current = q;
+  for(; i < ELEMENTS; i++) {
+    if(current->value == nothing) {
+      return 0;
     }
+    current = current->next;
+  }
+  return 1;
 }
-void queueAccessPermit(int semSetId){
-	struct sembuf dec = {0,-1,0};
-	semop(semSetId, &dec, 1);
+
+int isQueueEmpty() {
+  int i = 0;
+  struct queue* current = q;
+  for(; i < ELEMENTS; i++) {
+    if(current->value != nothing) {
+      return 0;
+    }
+    current = current->next;
+  }
+  return 1;
 }
-void queueAccessRelease(int semSetId){
-	struct sembuf inc = {0,1,0};
-	semop(semSetId, &inc, 1);
+
+/**
+ * provides synchronizedAccess based on current semaphore lock values: randomAccessLock, isFull, isEmpty
+ */
+void synchronizedAccess(void (*function)(), bool randomAccessLock, bool produce) {
+  if(produce) {
+    semIncrBy(semId, PRODUCER, -1);
+    semIncrBy(semId, CRITICAL, -1);
+
+    (*function)(); // produce or consume
+
+    semIncrBy(semId, CRITICAL, 1);
+    semIncrBy(semId, CONSUMER, 1);
+  } else {
+    semIncrBy(semId, CONSUMER, -1);
+    semIncrBy(semId, CRITICAL, -1);
+
+    (*function)(); // produce or consume
+
+    semIncrBy(semId, CRITICAL, 1);
+    semIncrBy(semId, PRODUCER, 1);
+  }
 }
-int queueAccessCheck(int semSetId){
-	return semctl(semSetId, 0, GETVAL, 0);
+
+void semIncrBy(int semId, int semaphore, int delta) {
+  struct sembuf data = {semaphore, delta, 0};
+  semop(semId, &data, 1); // Update the selected semaphore (increment/decrement)
 }
-void queueAdditionPermit(int semSetId){
-	struct sembuf dec = {1,-1,0};
-	semop(semSetId, &dec, 1);
+
+int getSemVal(int semId, int semaphore) {
+  return semctl(semId, semaphore, GETVAL);
 }
-void queueAdditionRelease(int semSetId){
-	struct sembuf inc = {1,1,0};
-	semop(semSetId, &inc, 1);
+
+void setSemVal(int semId, int semaphore, int value) {
+  if (semctl(semId, semaphore, SETVAL, value) == -1) {
+    printf("Error setting semaphore %d with value %d\n", semaphore, value);
+    exit(8);
+  }
 }
-int queueAdditionCheck(int semSetId){
-	return semctl(semSetId, 1, GETVAL, 0);
+
+void assertCanRemove() {
+  produce();
+  produce();
+  assert(q->value!=nothing, "Production failed!");
+  synchronizedAccess(&consume, false, false);
+  assert(q->value == nothing, "Queue must have values initialized to nothing!");
+  assert(q->next == consumeLocation, "The consumeLocation was not set after consume");
 }
-void queueRemovalPermit(int semSetId){
-	struct sembuf dec = {2,-1,0};
-	semop(semSetId, &dec, 1);
+
+void assert(bool val, char* msg) {
+  if(!val) {
+    printf("assertion failed: %s\n", msg);
+    exit(5);
+  }
 }
-void queueRemovalRelease(int semSetId){
-	struct sembuf inc = {2,1,0};
-	semop(semSetId, &inc, 1);
+
+void assertCanProduce() {
+  synchronizedAccess(&produce, false, true);
+
+  assert(q->value != nothing, "syncronized produce failed!");
+  assert(q->next == produceLocation, "produce was not correct!");
+  assert(q->next->position == produceLocation->position, "produce was not correct!");
 }
-int queueRemovalCheck(int semSetId){
-	return semctl(semSetId, 2, GETVAL, 0);
-}
+
 /**
  * Produce using the global produceLocation variable.
  */
-void produce(int semSetId) {
-	//Access and Permit
-	queueAdditionPermit(semSetId);
-	queueAccessPermit(semSetId);
-	addItem(semSetId);
-	//Lift queue usage and let consumer consume
-	queueRemovalRelease(semSetId);
-	queueAccessRelease(semSetId);
+void produce() {
+  // find next available produceLocation.
+  while(produceLocation->value != nothing) {
+    produceLocation = produceLocation->next;
+  }
+  produceLocation->value = rand()%500+1;
+  (q+10)->value += 1;
+  printf("%6d%6d%9d%7d%8d%8d   produce %9d %14d\n",
+      getpid(),
+      produceLocation->value,
+      produceLocation->position,
+      semctl(semId, 0, GETVAL),
+      semctl(semId, 1, GETVAL) + 1,
+      semctl(semId, 2, GETVAL) + 1,
+      (q+10)->value,
+      (q+11)->value
+      );
 }
 
 /*
  * This function is the inverse of produce().
  */
-void consume(int semSetId) {
-  //Access and Permit
-	queueRemovalPermit(semSetId);
-	queueAccessPermit(semSetId);
-	removeItem(semSetId);
-	//Lift queue usage and let consumer consume
-	queueAdditionRelease(semSetId);
-	queueAccessRelease(semSetId);
-}
-
-void addItem(int semSetId){
-	struct queue* current = q;
-	for(int i = 0; i < 10;i++){
-		if(current->value == 0){
-			current->value = rand();
-			if(current->value == 0){
-				current->value = 1;
-			}
-			printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\tproduced\t\t%d\t\t%d\n", getpid(), current->value, current->position,
-                       queueAccessCheck(semSetId), queueAdditionCheck(semSetId), queueRemovalCheck(semSetId), *producerCount, *consumerCount);
-			return;
-		}
-		current = current->next;
-	}
-}
-void removeItem(int semSetId){
-	struct queue* current = q;
-	for(int i = 0; i < 10;i++){
-		if(current->value != 0){
-			printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\tconsumed\t\t%d\t\t%d\n", getpid(), current->value, current->position,
-                       queueAccessCheck(semSetId), queueAdditionCheck(semSetId), queueRemovalCheck(semSetId), *producerCount, *consumerCount);
-			current->value = 0;
-			return;
-		}
-		current = current->next;
-	}
-}
-void releaseSharedResources(int semIds[], int shmIds[]){
-	for(int i = 0; i < (sizeof(semIds)/sizeof(int));i++){
-		if (semctl(semIds[i], IPC_RMID, 0) == -1) {
-    	  printf("error in semctl");
-		exit(1);
-		}
-	}
-	for(int i = 0; i < (sizeof(shmIds)/sizeof(int));i++){
-		if (shmctl(shmIds[i], IPC_RMID, 0) == -1) {
-    	  printf("error in semctl");
-		exit(1);
-		}
-	}
+void consume() {
+  int i = 0;
+  while(consumeLocation->value == nothing && !isQueueEmpty()) {
+    consumeLocation = consumeLocation->next;
+  }
+  (q+11)->value += 1;
+  printf("%6d%6d%9d%7d%8d%8d   consume %9d %14d\n",
+      getpid(),
+      consumeLocation->value,
+      consumeLocation->position,
+      semctl(semId, 0, GETVAL),
+      semctl(semId, 1, GETVAL) + 1,
+      semctl(semId, 2, GETVAL) + 1,
+      (q+10)->value,
+      (q+11)->value
+  );
+  if(consumeLocation->value != nothing) {
+    consumeLocation->value = nothing;
+  }
 }
 
 /*
@@ -265,20 +266,53 @@ void releaseSharedResources(int semIds[], int shmIds[]){
  * Although technically, it just returns a
  * pointer the first element to the LinkedList queue.
  */
-struct queue* createQueue() {
-  int elements = 10;
-  struct queue* result = (struct queue*) malloc(elements*sizeof(struct queue));
-
-  struct queue* current = result;
+struct queue* createQueue(struct queue* first) {
+  struct queue* current = first;
   int i;
-  for(i = 0; i < elements; i++) {
-    current->next = result + (i * sizeof(struct queue));
+  for(i = 0; i < ELEMENTS; i++) {
+    current->next = first + i + 1;
     current->position = i;
-    current->value = nothing;
+
+    if(i == ELEMENTS-1) {
+      current->next = first;
+    }
     current = current->next;
   }
 
-  // circular linked list. Last next pointer goes to the first one! :D
-  current->next = result;
-  return result;
+  assert(current == first, "Queue is not circular");
+  return first;
+}
+
+/*
+ * Valid Queue is defined as a queue that contains
+ * a LinkedList of Queue structs, in ASC order by q->position.
+ * Also last->next->position == first->position
+ */
+void assertValidQueue() {
+  int i;
+  struct queue* first = q;
+  struct queue* current = first;
+
+  assert((q+9)->next == q, "Queue is not circular or does not contain 10 items!");
+
+  for(i = 0; i < ELEMENTS; i++) {
+    assert(current->value == nothing, "All entries should be initialized to nothing");
+    assert(current->position == i, "Position is not correct");
+    current = current->next;
+  }
+}
+
+void assertFullQueue() {
+  // fill queue
+  int i;
+  if(fork() == 0) {
+    for(i = 0; i < ELEMENTS; i++) {
+      synchronizedAccess(&produce, true, true);
+      sleep(1);
+    }
+    exit(0);
+  }
+  sleep(10);
+  // test that isFullQueue is true!
+  assert(isQueueFull() == 1, "Queue expected to report full!");
 }
