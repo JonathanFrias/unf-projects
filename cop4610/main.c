@@ -63,7 +63,7 @@ void setup() {
   // Create a segment of shared memory
   assert(((shared_mem_id = shmget(IPC_PRIVATE, QUEUE_SIZE+4, 0777))) != -1, "Error: Failed to Create Shared Memory Segment");
   assert((shared_mem_ptr = (struct queue*)shmat(shared_mem_id, (void *)0, 0)) != (void *)-1,
-    "Error: Failed to get Memeory Segment Pointer");
+      "Error: Failed to get Memeory Segment Pointer");
 
   produceLocation = consumeLocation = q = createQueue(shared_mem_ptr);
   (q+10)->value = 0;
@@ -114,20 +114,20 @@ int main(int argc, char* argv[]) {
         synchronizedAccess(&consume, true, false);
       }
       if(i == consumers-1){
-	for(int j = 0; j < numExtraItems; j++) {
-         synchronizedAccess(&consume, true, false);
+        for(int j = 0; j < numExtraItems; j++) {
+          synchronizedAccess(&consume, true, false);
         }
       }
       exit(0);
     }
   }
   for(i = 0; i < producers; i++) {
-	  //printf("\nexited %d of %d producers\n", i+1,producers);
-	  waitpid(producerChildren[i], &exitCode, 0);
+    //printf("\nexited %d of %d producers\n", i+1,producers);
+    waitpid(producerChildren[i], &exitCode, 0);
   }
   for(i = 0; i < consumers; i++) {
-	  //printf("\nexited %d of %d consumers\n", i+1,consumers);
-	  waitpid(consumerChildren[i], &exitCode, 0);
+    //printf("\nexited %d of %d consumers\n", i+1,consumers);
+    waitpid(consumerChildren[i], &exitCode, 0);
   }
   semctl(semId, IPC_RMID, 0);
   shmctl(shared_mem_id, IPC_RMID, 0);
@@ -164,8 +164,8 @@ int isQueueEmpty() {
  */
 void synchronizedAccess(void (*function)(), bool randomAccessLock, bool produce) {
   if(produce) {
-	semIncrBy(semId, PRODUCER, -1);
-	semIncrBy(semId, CRITICAL, -1);
+    semIncrBy(semId, PRODUCER, -1);
+    semIncrBy(semId, CRITICAL, -1);
     (*function)(); // produce or consume
 
     semIncrBy(semId, CRITICAL, 1);
