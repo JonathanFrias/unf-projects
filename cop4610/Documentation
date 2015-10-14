@@ -1,0 +1,18 @@
+Purpose: 
+project is to display the usage of semaphores and shared memory.
+Details:
+This program implements a circular queue, semphores, and shared memory usage
+We control the queue via calls to the produce or consume functions which also
+handel making modifications to the semphore flags of which there are three.
+
+In addition, we have methods to control inc and dec the semaphores.
+They are some assert methods that we used to double check our logic.
+the consume and produce function represent the child processes that form the producers and consumers.
+
+Difficulties:
+We had issues understanding loading the queue plus the COUNTERS into shared memory but moving the pointer was the fix
+Another stupid issue we should have caught was that one consumer was eating all the items. this was do to one of our for loops
+statements being incorrect.
+Bugs created more bugs and tracking those issues were intresting
+Sharing code thanks to Naga's unfimilarity with github's standards
+The semaphore stuff was pretty easy thanks to all the support files given to us by Jim Littlton.

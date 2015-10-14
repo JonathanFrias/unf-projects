@@ -73,6 +73,7 @@ void setup() {
 
 int main(int argc, char* argv[]) {
   shmctl(shared_mem_id, IPC_RMID, 0);
+  semctl(semId, IPC_RMID, 0);
   assert(argc == 4, "You must provide producers, consumers, and an amount of elements to generate");
 
   setup();
@@ -92,39 +93,46 @@ int main(int argc, char* argv[]) {
   int producers = atoi(argv[1]);
   int consumers = atoi(argv[2]);
   int numItems = atoi(argv[3]);
+  int minPerConsumer = (producers*numItems)/consumers;
+  int numExtraItems = (producers*numItems)%consumers;
 
   for(i = 0; i < producers; i++) {
     if((producerChildren[i] = fork()) == 0) { //child producers
 
       int j;
-      for(j = 0; j < atoi(argv[3]); j++) {
+      for(j = 0; j < numItems; j++) {
         synchronizedAccess(&produce, true, true);
       }
       exit(0);
     }
   }
 
-  for(i = 0; i < atoi(argv[2]); i++) {
+  for(i = 0; i < consumers; i++) {
     if((consumerChildren[i] = fork()) == 0) {
       // child
-      int j ;
-      for(j = 0; j < producers*numItems; j++) {
+      for(int j = 0; j < minPerConsumer; j++) {
         synchronizedAccess(&consume, true, false);
+      }
+      if(i == consumers-1){
+	for(int j = 0; j < numExtraItems; j++) {
+         synchronizedAccess(&consume, true, false);
+        }
       }
       exit(0);
     }
   }
-
-  for(i = 0 ; i < atoi(argv[1]); i++) {
-    waitpid(producerChildren[i], &exitCode, 0);
+  for(i = 0; i < producers; i++) {
+	  //printf("\nexited %d of %d producers\n", i+1,producers);
+	  waitpid(producerChildren[i], &exitCode, 0);
   }
-  for(i = 0 ; i < atoi(argv[2]); i++) {
-    waitpid(consumerChildren[i], &exitCode, 0);
+  for(i = 0; i < consumers; i++) {
+	  //printf("\nexited %d of %d consumers\n", i+1,consumers);
+	  waitpid(consumerChildren[i], &exitCode, 0);
   }
-
-  shmctl(shared_mem_id, 0, IPC_RMID);
-  semctl(semId, 0, IPC_RMID);
-  exit(0);
+  semctl(semId, IPC_RMID, 0);
+  shmctl(shared_mem_id, IPC_RMID, 0);
+  printf("finished\n");
+  return 0;
 }
 
 int isQueueFull() {
@@ -143,7 +151,7 @@ int isQueueEmpty() {
   int i = 0;
   struct queue* current = q;
   for(; i < ELEMENTS; i++) {
-    if(current->value == something) {
+    if(current->value != nothing) {
       return 0;
     }
     current = current->next;
@@ -156,9 +164,8 @@ int isQueueEmpty() {
  */
 void synchronizedAccess(void (*function)(), bool randomAccessLock, bool produce) {
   if(produce) {
-    semIncrBy(semId, PRODUCER, -1);
-    semIncrBy(semId, CRITICAL, -1);
-
+	semIncrBy(semId, PRODUCER, -1);
+	semIncrBy(semId, CRITICAL, -1);
     (*function)(); // produce or consume
 
     semIncrBy(semId, CRITICAL, 1);
@@ -193,7 +200,7 @@ void setSemVal(int semId, int semaphore, int value) {
 void assertCanRemove() {
   produce();
   produce();
-  assert(q->value==something, "Production failed!");
+  assert(q->value!=nothing, "Production failed!");
   synchronizedAccess(&consume, false, false);
   assert(q->value == nothing, "Queue must have values initialized to nothing!");
   assert(q->next == consumeLocation, "The consumeLocation was not set after consume");
@@ -209,7 +216,7 @@ void assert(bool val, char* msg) {
 void assertCanProduce() {
   synchronizedAccess(&produce, false, true);
 
-  assert(q->value == something, "syncronized produce failed!");
+  assert(q->value != nothing, "syncronized produce failed!");
   assert(q->next == produceLocation, "produce was not correct!");
   assert(q->next->position == produceLocation->position, "produce was not correct!");
 }
@@ -219,12 +226,12 @@ void assertCanProduce() {
  */
 void produce() {
   // find next available produceLocation.
-  while(produceLocation->value == something) {
+  while(produceLocation->value != nothing) {
     produceLocation = produceLocation->next;
   }
-  produceLocation->value = something;
+  produceLocation->value = rand()%500+1;
   (q+10)->value += 1;
-  printf("%7d%7d%7d%7d%7d%7d   produce %7d %14d\n",
+  printf("%6d%6d%9d%7d%8d%8d   produce %9d %14d\n",
       getpid(),
       produceLocation->value,
       produceLocation->position,
@@ -244,12 +251,8 @@ void consume() {
   while(consumeLocation->value == nothing && !isQueueEmpty()) {
     consumeLocation = consumeLocation->next;
   }
-  if(consumeLocation->value == something) {
-    consumeLocation->value = nothing;
-  }
-
   (q+11)->value += 1;
-  printf("%7d%7d%7d%7d%7d%7d   consume %7d %14d\n",
+  printf("%6d%6d%9d%7d%8d%8d   consume %9d %14d\n",
       getpid(),
       consumeLocation->value,
       consumeLocation->position,
@@ -259,6 +262,9 @@ void consume() {
       (q+10)->value,
       (q+11)->value
   );
+  if(consumeLocation->value != nothing) {
+    consumeLocation->value = nothing;
+  }
 }
 
 /*
