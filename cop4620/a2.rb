@@ -40,6 +40,7 @@ class A2
     if token == current_token
       puts "", "ACCEPT" + ("*"*25) + current_token, "" if $debug
       @current_token += 1
+      token
     else
       raise A2Transitions::RejectError
     end
@@ -58,12 +59,15 @@ class A2
     end
   end
 
-  def reject
+  def reject(msg="")
+    puts msg if $debug
     raise A2Transitions::RejectError
   end
 
   def token_text
-    current_token && current_token.split(":")[1].strip
+    current_token &&
+      current_token.match(/:/) &&
+      current_token.split(":")[1].strip
   end
 
   def token_type(token=current_token)
@@ -75,7 +79,8 @@ class A2
     # All the transitions are contained there
     begin
       goto :start
-    rescue A2Transitions::RejectError
+    rescue A2Transitions::RejectError => e
+      puts e.backtrace
       return "REJECT"
     end
 
@@ -113,8 +118,12 @@ class A2
   end
 
   # accepts a method and prints the method we are transitioning to
-  def goto(method)
+  def goto(method, args=nil)
     print(method)
-    send(method)
+    if args
+      send(method, args)
+    else
+      send(method)
+    end
   end
 end
