@@ -303,7 +303,7 @@ RSpec.describe A2 do
           i = i + 1;
         }
       }
-      void input(void) {}
+      int input(void) {return 0;}
       void output(int x) {}
       void main(void)
       {
@@ -333,10 +333,10 @@ RSpec.describe A2 do
             int nickdaman;
             int x;
             float y;
-            void z;
+            int z;
 
+              int a;
             if (1) {
-                int a;
                 float b;
             } else {
                 while(5) {
@@ -516,8 +516,8 @@ int msadnain (int  a[], int sda, float b)
 {
     int sasadflkjsda[18];
     float asda[18];
-    void aewjl[0];
-    void aasd[10];
+    float aewjl[0];
+    float aasd[10];
 
     int i; int y; int z; int th; int w; int x;
     int t;
@@ -726,7 +726,7 @@ int x;
 	int s;
       float r;
 if(z[1]=7.0)
-		return z;
+		return z[0];
 	while(r>z[2])
 	{
 		if (x==2)
@@ -837,7 +837,7 @@ float noclue(float z[])
     int c;
     int d;
   if(z[1]=7.0E-2)
-		return z;
+		return z[0];
 	while(r>z[2])
 	{
 		if (x==2)
@@ -871,6 +871,7 @@ float noclue(float z[])
           int x;
           return 0;
         }
+        return 0;
       }
       "
     end
@@ -900,7 +901,7 @@ float noclue(float z[])
       int r;
       int x; int z;
 	while(r>z)
-	{if (x==2)
+	{ if (x==2)
 			return x;
       }
 	}

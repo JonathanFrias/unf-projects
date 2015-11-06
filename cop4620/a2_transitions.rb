@@ -18,6 +18,7 @@ module A2Transitions
     type = goto :type_specifier
     id = goto :id
 
+    reject("variable #{id} cannot be type 'VOID'") if type == "VOID"
     if current_token == '['
       type += '[]'
       accept "["
@@ -113,7 +114,11 @@ module A2Transitions
     accept RETURN
     type = 'VOID'
     type = goto(:expression) if current_token != ';'
-    current_context.returned_type = type
+    tmp = current_context
+    while(tmp.id.nil?)
+      tmp=current_context.prev_context
+    end
+    tmp.returned_type = type
     accept ";"
     type
   end
@@ -143,6 +148,7 @@ module A2Transitions
     if next_token == '[' || next_token == '='
       result = goto :simple_expression
       result = goto :expression if soft_accept '='
+      reject("VOID return value should be ignored") if result == "VOID"
     end
 
     result ||= goto :simple_expression
@@ -206,8 +212,6 @@ module A2Transitions
       goto :expression
       accept RIGHT_BRACKET
     end
-
-    #TODO search the prev contexts
 
     reject("Could not find #{id}") if current_context.variable_get(id).nil?
     type

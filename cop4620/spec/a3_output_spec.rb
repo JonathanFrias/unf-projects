@@ -674,5 +674,75 @@ RSpec.describe A2 do
 
       it { is_valid }
     end
+
+    describe "test4" do
+      let(:input) do
+        "
+        int main(void)
+{
+  { int a; int a; }
+  return 0;
+}
+        "
+      end
+
+      it { is_not_valid }
+    end
+
+    describe "test5" do
+      let(:input) do
+        "
+        int main(void)
+        {
+          {
+            return 0;
+          }
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+  end
+
+  context "id's should not be type void" do
+    describe "test1" do
+      let(:input) do
+        "
+      void main(void) {
+        void a;
+        return;
+      }
+        "
+      end
+      it { is_not_valid }
+    end
+
+    describe "test2" do
+      let(:input) do
+        "
+      void main(void) {
+        void a[];
+        return;
+      }
+        "
+      end
+      it { is_not_valid }
+    end
+
+    describe "test3" do
+      let(:input) do
+        "
+        void f(void) {
+        }
+      void main(void) {
+        int a;
+        a = f(); // function return value should be ignored.
+        return;
+      }
+        "
+      end
+      it { is_not_valid }
+    end
   end
 end
