@@ -115,7 +115,7 @@ RSpec.describe A2 do
     describe "test1" do
       let(:input) do
         "
-        void f(void) {
+        void main(void) {
           return;
         }
         "
@@ -546,6 +546,20 @@ RSpec.describe A2 do
 
       it { is_not_valid }
     end
+
+    describe "test4" do
+      let(:input) do
+        "
+        void main(void) {
+        float a[3];
+
+        a[2.1]; // no float index access!
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
   end
 
   context "nested function calls" do
@@ -703,6 +717,40 @@ RSpec.describe A2 do
 
       it { is_valid }
     end
+
+    describe "test6" do
+      let(:input) do
+        "
+        int a;
+        int main(void)
+        {
+          int a;
+          return a;
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test7" do
+      let(:input) do
+        "
+        int a;
+        float b;
+
+        int f(float b) {return 0;}
+        int main(void)
+        {
+          int a;
+          return f(b);
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+
   end
 
   context "id's should not be type void" do
@@ -742,6 +790,58 @@ RSpec.describe A2 do
       }
         "
       end
+      it { is_not_valid }
+    end
+  end
+
+  context "extra type checking " do
+    describe "test1" do
+
+      let(:input) do
+        "
+      float a[100];
+
+      int f(void) {
+      return 1;
+      }
+      float main(void) {
+        return a[f()];
+      }
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test2" do
+
+      let(:input) do
+        "
+      void a[100];
+
+      float main(void) {
+      return 0.0;
+      }
+        "
+      end
+
+      it { is_not_valid }
+    end
+  end
+
+  context "each program must have one main function" do
+    describe "test1" do
+
+      let(:input) do
+        "
+
+      float main2(void) {
+      return 0.0;
+      }
+      int main(void) {}
+        "
+      end
+
       it { is_not_valid }
     end
   end

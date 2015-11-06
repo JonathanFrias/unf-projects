@@ -84,6 +84,8 @@ class A2
       return "REJECT"
     end
 
+    reject("No main fucntion detected!") if root_context.functions['main'].nil?
+
     # if the above program didn't error, we're in the clear!
     if last_token?
       "ACCEPT"

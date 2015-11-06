@@ -9,8 +9,8 @@ module A2Transitions
 
   # this is the "Start" symbol
   def start
-     @current_context = Context.new
      @root_context = RootContext.new
+     @current_context = root_context
     goto :declaration_list
   end
 
@@ -116,7 +116,7 @@ module A2Transitions
     type = goto(:expression) if current_token != ';'
     tmp = current_context
     while(tmp.id.nil?)
-      tmp=current_context.prev_context
+      tmp = current_context.prev_context
     end
     tmp.returned_type = type
     accept ";"
@@ -209,7 +209,8 @@ module A2Transitions
     if current_token == LEFT_BRACKET
       type = type.gsub(/\[\]/, '')
       accept LEFT_BRACKET
-      goto :expression
+      index_expression = goto :expression
+      reject("Must use integers to access array index") if index_expression != "INT"
       accept RIGHT_BRACKET
     end
 
