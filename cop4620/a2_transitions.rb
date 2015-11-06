@@ -51,9 +51,11 @@ module A2Transitions
 
     type = goto :type_specifier
     id = goto :id
+    if soft_accept LEFT_BRACKET
+      type += '[]'
+      accept RIGHT_BRACKET
+    end
     start_value << type
-    soft_accept LEFT_BRACKET
-    soft_accept RIGHT_BRACKET
     def_variable(type, id)
     goto :params, start_value if soft_accept ','
     start_value
@@ -184,16 +186,18 @@ module A2Transitions
 
   def var
     id = goto :id
+    type = current_context.variables[id]
     if current_token == LEFT_BRACKET
+      type = type.gsub(/\[\]/, '')
       accept LEFT_BRACKET
       goto :expression
       accept RIGHT_BRACKET
     end
 
-    #TODO use prev context
+    #TODO search the prev contexts
 
     reject("Could not find #{id}") if current_context.variables[id].nil?
-    current_context.variables[id]
+    type
   end
 
   def factor

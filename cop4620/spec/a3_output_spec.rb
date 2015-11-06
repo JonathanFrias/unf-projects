@@ -495,4 +495,56 @@ RSpec.describe A2 do
     end
   end
 
+  context "array index agreement" do
+    describe "test1" do
+      let(:input) do
+        "
+        void printf(int stuff[]) {
+          return;
+        }
+        void main(void) {
+          int a[100];
+
+          printf(a[3]); // function expects type int[] but int given
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
+
+    describe "test2" do
+      let(:input) do
+        "
+        void printf(int stuff[]) {
+          return;
+        }
+        void main(void) {
+          int a[100];
+
+          printf(a);
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test3" do
+      let(:input) do
+        "
+        void printf(int stuff[]) {
+          return;
+        }
+        void main(void) {
+          int a;
+
+          printf(a); // function expects type int[] but int given
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
+  end
 end

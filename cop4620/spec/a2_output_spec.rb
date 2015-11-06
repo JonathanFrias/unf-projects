@@ -308,7 +308,7 @@ RSpec.describe A2 do
       void main(void)
       {
         int i;
-        int x;
+        int x[10];
         i = 0;
         while(i < 10) {
           x[i] = input();
@@ -496,7 +496,7 @@ void sort( int a[], int low, int high )
 
 void main (void)
 { int i;
-int x;
+int x[213];
   i = 0;
   while (i < 10)
   {  x[i] = input();
@@ -549,7 +549,7 @@ int msadnain (int  a[], int sda, float b)
     }
 
     if (a)
-        a = a + 1;
+        a[13]= a[2] + 1;
 
     return (x + y) / 100;
 }
@@ -727,7 +727,7 @@ int x;
       float r;
 if(z[1]=7.0)
 		return z;
-	while(r>z)
+	while(r>z[2])
 	{
 		if (x==2)
 			return 3.4E-6;
@@ -838,7 +838,7 @@ float noclue(float z[])
     int d;
   if(z[1]=7.0E-2)
 		return z;
-	while(r>z)
+	while(r>z[2])
 	{
 		if (x==2)
 			return 3.4E-6;
