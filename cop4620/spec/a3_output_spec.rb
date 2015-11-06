@@ -547,4 +547,132 @@ RSpec.describe A2 do
       it { is_not_valid }
     end
   end
+
+  context "nested function calls" do
+    describe "test1" do
+      let(:input) do
+        "
+        int f(int x) {
+          return 1;
+        }
+        int g(int x) {
+          return 0;
+        }
+        int main(void) {
+        int x;
+        x = 1;
+          return f(g(1));
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test2" do
+      let(:input) do
+        "
+        float f(int x, int y) {
+          return 1.0E+1000;
+        }
+        int g(int x, float asdf) {
+          return 0;
+        }
+
+        int h(float x) {
+        return 0;
+        }
+        int main(void) {
+        int x;
+        x = 1;
+          return h(f(g(1, 2.1), 3));
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test3" do
+      let(:input) do
+        "
+        float f(int x, int y) {
+          return 1.0E+1000;
+        }
+        void g(int x, float asdf) {
+          return 0;
+        }
+
+        int h(float x) {
+        return 0;
+        }
+        int main(void) {
+        int x;
+        x = 1;
+          return h(f(g(1, 2.1), 3));
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
+  end
+
+  context "nested scopes are correctly defined" do
+    describe "test1" do
+      let(:input) do
+        "
+        int main(void)
+{ int a;
+  { int a; }
+  { int a; }
+  { int a; }
+  return a;
+}
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test2" do
+      let(:input) do
+        "
+        void printf(int a) {
+        return;
+        }
+
+        int main(void)
+{ int a;
+  { printf(a); }
+  { int a; }
+  { int a; }
+  return a;
+}
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test3" do
+      let(:input) do
+        "
+        void printf(int a) {
+        return;
+        }
+
+        int main(void)
+{ int a;
+  { printf(a); }
+  { int a; }
+  { int a; }
+  return a;
+}
+        "
+      end
+
+      it { is_valid }
+    end
+  end
 end

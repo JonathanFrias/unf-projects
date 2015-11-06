@@ -10,6 +10,11 @@ class Context
     @current_param = 0
     @returned_type = "VOID"
   end
+
+  def variable_get(id)
+    return variables[id] if variables[id]
+    return prev_context.variable_get(id)
+  end
 end
 
 class RootContext
@@ -18,5 +23,9 @@ class RootContext
   def initialize
     @variables = {}
     @functions = {}
+  end
+
+  def variable_get(id)
+    variables[id]
   end
 end

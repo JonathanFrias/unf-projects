@@ -40,8 +40,8 @@ module A2Transitions
     accept ")"
     def_function(type, id, params || [])
     current_context.returned_type = 'VOID'
-    goto :compound_statement
-    reject("returned type '#{current_context.returned_type}' does not match function defition '#{id}'->'#{type}'") if current_context.returned_type != current_context.return_type
+    goto :compound_statement, current_context
+    reject("returned type '#{current_context.returned_type}' does not match function defition '#{id}'->'#{type}'") if current_context.returned_type != root_context.functions[id].return_type
     @current_context = current_context.prev_context
     type
   end
@@ -67,11 +67,24 @@ module A2Transitions
     goto :local_declarations while type_keyword_specified?
   end
 
-  def compound_statement
+  def compound_statement(alternate_context=nil)
+    push_context unless alternate_context
     accept "{"
     goto :local_declarations if type_keyword_specified?
     goto :statement_list if current_token != '}'
     accept "}"
+    pop_context unless alternate_context
+  end
+
+  def push_context
+    prev_context = @current_context
+    @current_context = Context.new
+    current_context.prev_context = prev_context
+    current_context
+  end
+
+  def pop_context
+    @current_context = @current_context.prev_context
   end
 
   def statement_list
@@ -186,7 +199,7 @@ module A2Transitions
 
   def var
     id = goto :id
-    type = current_context.variables[id]
+    type = current_context.variable_get id
     if current_token == LEFT_BRACKET
       type = type.gsub(/\[\]/, '')
       accept LEFT_BRACKET
@@ -196,7 +209,7 @@ module A2Transitions
 
     #TODO search the prev contexts
 
-    reject("Could not find #{id}") if current_context.variables[id].nil?
+    reject("Could not find #{id}") if current_context.variable_get(id).nil?
     type
   end
 
