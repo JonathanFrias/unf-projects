@@ -232,7 +232,7 @@ RSpec.describe A2 do
       int main(void) {
       int a;
       int b;
-        f(a[2.2], b[3], 3 == 3);
+        f(a[2], b[3], 3 == 3);
         return 3;
       }
       "
@@ -629,7 +629,7 @@ int gcd (int u , int v )
             /* test13  testing void list accept*/
 
 
-      void noclue(void)
+      void main(void)
       {
       int z;
       int r;
@@ -718,6 +718,7 @@ int noclue(int z[])
       "
       /* test21  testing float accept*/
 
+void main(void) {}
 int q[6];
 
 float noclue(float z[])
@@ -741,6 +742,7 @@ if(z[1]=7.0)
     let(:number_in_id) do
       "/*  test23 number in ID token */
 
+void main(void) {}
       int gcd(int adsf, int y) { return 1;}
 int gc1d ( int u , int v )
 {	// note prob here
@@ -826,6 +828,7 @@ int noclue(int z[])
 
 int q[6];
 
+void main(void) {}
 float noclue(float z[])
 {
 	int s;
@@ -866,6 +869,7 @@ float noclue(float z[])
 
     let(:nested_scope) do
       "
+void main(void) {}
       int main4(void) {
         {  // yay im nested!
           int x;
@@ -879,8 +883,10 @@ float noclue(float z[])
     let(:expressive_indicies) do
       "
 
-      void function(int a ,int b, int c) {
+void main(void) {}
+      int function(int a ,int b, int c) {
 
+      return a;
       }
       int mai3n(void) {
       int b;
@@ -897,6 +903,8 @@ float noclue(float z[])
 
     let(:nested_stmts) do
       "
+void main(void) {}
+
       int msdain(void) {
       int r;
       int x; int z;
@@ -921,11 +929,11 @@ float noclue(float z[])
     let(:inputs) do
       [
         # [ TEST_NUMBER , TEST_CODE, EXPECTED_RESULT] ,
-        [0  , "int a[1.2];"       , "ACCEPT" ]        ,
+        [0  , "int a[1.2];"       , "REJECT" ]        ,
         [1  , "int b"             , "REJECT" ]        ,
         [2  , "b b"               , "REJECT" ]        ,
         [3  , "b b(void)"         , "REJECT" ]        ,
-        [4  , "void b(void){}"    , "ACCEPT" ]        ,
+        [4  , "void main(void){}" , "ACCEPT" ]        ,
         [5  , "f(void)"           , "REJECT" ]        ,
         [6  , function_decs       , "ACCEPT" ]        ,
         [7  , invalid1            , "REJECT" ]        ,
@@ -969,7 +977,7 @@ float noclue(float z[])
         [45 , function_decs2      , "REJECT" ]        ,
         [46 , nested_scope        , "ACCEPT" ]        ,
         [47 , expressive_indicies , "ACCEPT" ]        ,
-        [48 , nested_stmts        , "ACCEPT" ]        ,
+        [48 , sested_stmts        , "ACCEPT" ]        ,
         [49 , bad_compare         , "REJECT" ]        ,
       ]
     end

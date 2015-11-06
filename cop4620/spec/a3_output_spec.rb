@@ -127,7 +127,7 @@ RSpec.describe A2 do
     describe "test2" do
       let(:input) do
         "
-          void f(void) {
+          void main(void) {
             return 1;
           }
         "
@@ -259,7 +259,7 @@ RSpec.describe A2 do
 
       let(:input) do
         "
-        int f(int a) {
+        int main(int a) {
           int a;
           return 0;
         }
@@ -272,7 +272,7 @@ RSpec.describe A2 do
 
       let(:input) do
         "
-        int f(int a) {
+        int main(int a) {
           float a;
         }
         "
@@ -284,7 +284,7 @@ RSpec.describe A2 do
 
       let(:input) do
         "
-        int f(void) {
+        int main(void) {
           float a;
           int a;
         }
@@ -297,7 +297,7 @@ RSpec.describe A2 do
 
       let(:input) do
         "
-        int f(void) {
+        int main(void) {
           int a;
           int a;
         }

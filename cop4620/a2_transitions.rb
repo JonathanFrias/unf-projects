@@ -12,6 +12,7 @@ module A2Transitions
      @root_context = RootContext.new
      @current_context = root_context
     goto :declaration_list
+    reject("No main function detected!") if root_context.functions['main'].nil?
   end
 
   def var_declaration
