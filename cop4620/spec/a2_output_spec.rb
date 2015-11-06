@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 RSpec.describe A2 do
 
@@ -977,7 +976,7 @@ void main(void) {}
         [45 , function_decs2      , "REJECT" ]        ,
         [46 , nested_scope        , "ACCEPT" ]        ,
         [47 , expressive_indicies , "ACCEPT" ]        ,
-        [48 , sested_stmts        , "ACCEPT" ]        ,
+        [48 , nested_stmts        , "ACCEPT" ]        ,
         [49 , bad_compare         , "REJECT" ]        ,
       ]
     end

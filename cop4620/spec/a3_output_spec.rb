@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 RSpec.describe A2 do
 
   subject { described_class.new(input).to_s }
