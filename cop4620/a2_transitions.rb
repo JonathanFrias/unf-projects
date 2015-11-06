@@ -19,6 +19,7 @@ module A2Transitions
     id = goto :id
 
     if current_token == '['
+      type += '[]'
       accept "["
       goto :number
       accept "]"
@@ -29,7 +30,8 @@ module A2Transitions
   end
 
   def func_declaration
-    new_context
+    @current_context = Context.new
+    current_context.prev_context = root_context
     type = goto :type_specifier
     id = goto :id
 
@@ -37,8 +39,9 @@ module A2Transitions
     params = goto :params, []
     accept ")"
     def_function(type, id, params || [])
+    current_context.returned_type = 'VOID'
     goto :compound_statement
-
+    reject("returned type '#{current_context.returned_type}' does not match function defition '#{id}'->'#{type}'") if current_context.returned_type != current_context.return_type
     @current_context = current_context.prev_context
     type
   end
@@ -95,8 +98,7 @@ module A2Transitions
     accept RETURN
     type = 'VOID'
     type = goto(:expression) if current_token != ';'
-    defined_return_type = root_context.functions[current_context.id].return_type
-    reject("returned type '#{type}' does not match function defition '#{current_context.id}'->'#{defined_return_type}'") if current_context.return_type != type
+    current_context.returned_type = type
     accept ";"
     type
   end
@@ -138,7 +140,7 @@ module A2Transitions
     if relop?
       goto :relop
       type2 = goto :additive_expression
-      reject if [
+      reject("invalid expression near '#{previous_token} #{current_token} #{next_token}'") if [
         ']',
         ',',
         '<=',
@@ -161,7 +163,7 @@ module A2Transitions
     while addop?
       goto :addop
       type2 = goto :term
-      reject("Cannot add #{type1} and #{type2}") if type1 != type2
+      reject("Cannot add #{type1} and #{type2}") if type1 != type2 || type1 == "VOID" || type2 == "VOID"
     end
     type1
   end
@@ -175,7 +177,7 @@ module A2Transitions
     while mulop?
       goto :mulop
       type2 = goto :factor
-      reject("Cannot multiply #{type1} with #{type2}") if type1 != type2
+      reject("Cannot multiply #{type1} with #{type2}") if type1 != type2 || type1 == 'VOID' || type2 == 'VOID'
     end
     type1
   end
@@ -301,11 +303,6 @@ module A2Transitions
   def def_variable(type, id)
     reject("Variable #{id} already defined") if current_context.variables[id]
     current_context.variables[id] = type
-  end
-
-  def new_context
-    prev_context = current_context
-    @current_context = Context.new(prev_context)
   end
 
   def integer?

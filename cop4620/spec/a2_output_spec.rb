@@ -53,10 +53,10 @@ RSpec.describe A2 do
         int a[2];
 
         int b;
-      int main(void) {}
-      float f(int x) {}
+      int main(void) {return 0;}
+      float f(int x) {return 1.1E-231; }
 
-      void g( void) {};
+      void g( void) {}; // <-- This last semi is invalid!
       "
     end
 
@@ -228,11 +228,12 @@ RSpec.describe A2 do
 
     let(:function_call2) do
       "
-      int f(int x, int y, int ex) {}
+      int f(int x, int y, int ex) {return 0;}
       int main(void) {
       int a;
       int b;
         f(a[2.2], b[3], 3 == 3);
+        return 3;
       }
       "
     end
@@ -427,7 +428,7 @@ RSpec.describe A2 do
 
     let(:blah) do
       "
-      int f(int x) {
+      void f(int x) {
       }
       int main(void) {
         if(1) return 2; else return 1;
@@ -655,6 +656,8 @@ int q[6];
 
 int noclue(int z])
 {
+int r;
+int x;
 	int s;
 	if(z[1]=7)
 		return z;
@@ -757,14 +760,9 @@ int z[6];
 int noclue(int z[])
 {
 	int s;
+  int 7a;
 	if(z[1] <= 7a)
 		return z;
-	while(r>z)
-	{if (x==2)
-			return x;
-	}
-
-
 }"
     end
 
@@ -776,7 +774,7 @@ int z[6];
 
 int noclue(int z[])
 {
-	int s;
+int b; int s;
 	if(z[1] >b= 7)		// = is token 26
 		return z;
 	while(r>z)
@@ -871,6 +869,7 @@ float noclue(float z[])
       int main4(void) {
         {  // yay im nested!
           int x;
+          return 0;
         }
       }
       "
@@ -890,6 +889,7 @@ float noclue(float z[])
       int c;
         d = e [ 21 ];
         b[function(a, b, c)] = 2;
+        return 123234523452345234;
       }
       "
     end
@@ -910,6 +910,8 @@ float noclue(float z[])
     let(:bad_compare) do
       "
         int masdain(void) {
+        int z;
+        int b;
           if(z[1] >b= 7) return ;
         }
       "

@@ -1,5 +1,5 @@
 class Context
-  attr_accessor :return_type, :variables, :prev_context, :params, :current_param, :id
+  attr_accessor :return_type, :returned_type, :variables, :prev_context, :params, :current_param, :id
 
   def initialize(prev_context=nil)
     @id = nil
@@ -8,6 +8,7 @@ class Context
     @prev_context = prev_context
     @params = []
     @current_param = 0
+    @returned_type = "VOID"
   end
 end
 

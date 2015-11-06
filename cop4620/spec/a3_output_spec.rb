@@ -261,6 +261,7 @@ RSpec.describe A2 do
         "
         int f(int a) {
           int a;
+          return 0;
         }
         "
       end
@@ -313,14 +314,16 @@ RSpec.describe A2 do
       let(:input) do
         "
       int main(void) {
-      void a;
-      void b;
-      a * b;
+        void a;
+        void b;
+        a * b;
+        return 0;
       }
         "
       end
       it { is_not_valid }
     end
+
     describe "test2" do
 
       let(:input) do
@@ -329,6 +332,7 @@ RSpec.describe A2 do
       void a;
       void b;
       a + b;
+      return 0;
       }
         "
       end
@@ -343,6 +347,7 @@ RSpec.describe A2 do
       void a;
       void b;
       a / b;
+      return 0;
       }
         "
       end
@@ -357,10 +362,137 @@ RSpec.describe A2 do
       void a;
       void b;
       a - b;
+      return 0;
       }
         "
       end
       it { is_not_valid }
     end
   end
+
+  context "operand agreement" do
+    describe "test1" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          int b;
+
+          float aa;
+          float bb;
+
+          a + b;
+          aa + bb;
+        }
+        "
+      end
+      it { is_valid }
+    end
+
+    describe "test2" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          int b;
+
+          float aa;
+          float bb;
+
+          a - b;
+          aa - bb;
+        }
+        "
+      end
+      it { is_valid }
+    end
+    describe "test3" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          int b;
+
+          float aa;
+          float bb;
+
+          a / b;
+          aa / bb;
+        }
+        "
+      end
+      it { is_valid }
+    end
+
+    describe "test4" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          int b;
+
+          float aa;
+          float bb;
+
+          a * b;
+          aa * bb;
+        }
+        "
+      end
+      it { is_valid }
+    end
+
+    describe "test5" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          float b;
+          a * b;
+        }
+        "
+      end
+      it { is_not_valid }
+    end
+
+    describe "test6" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          float b;
+          a + b;
+        }
+        "
+      end
+      it { is_not_valid }
+    end
+
+    describe "test7" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          float b;
+          a - b;
+        }
+        "
+      end
+      it { is_not_valid }
+    end
+
+    describe "test8" do
+      let(:input) do
+        "
+        void main(void) {
+          int a;
+          float b;
+          a / b;
+        }
+        "
+      end
+      it { is_not_valid }
+    end
+  end
+
 end
