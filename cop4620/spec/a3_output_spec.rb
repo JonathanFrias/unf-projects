@@ -198,7 +198,6 @@ RSpec.describe A2 do
     describe  "test3.5" do
       let(:input) do
         "
-
         int f(float a, int b) {
           return a + b;
         }
@@ -217,7 +216,6 @@ RSpec.describe A2 do
     describe  "test4" do
       let(:input) do
         "
-
         int f(float a, int b) {
           return 12345435;
         }
@@ -328,10 +326,10 @@ RSpec.describe A2 do
       let(:input) do
         "
       int main(void) {
-      void a;
-      void b;
-      a + b;
-      return 0;
+        void a;
+        void b;
+        a + b;
+        return 0;
       }
         "
       end
@@ -343,10 +341,12 @@ RSpec.describe A2 do
       let(:input) do
         "
       int main(void) {
-      void a;
-      void b;
-      a / b;
-      return 0;
+        void a;
+        void b;a /
+
+        b
+;
+        return 0;
       }
         "
       end
@@ -491,6 +491,7 @@ RSpec.describe A2 do
         "
       end
       it { is_not_valid }
+
     end
   end
 

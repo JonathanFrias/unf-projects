@@ -9,8 +9,8 @@ module A2Transitions
 
   # this is the "Start" symbol
   def start
-     @root_context = RootContext.new
-     @current_context = root_context
+    @root_context = RootContext.new
+    @current_context = root_context
     goto :declaration_list
     reject("No main function detected!") if root_context.functions['main'].nil?
   end
