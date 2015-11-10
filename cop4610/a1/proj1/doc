@@ -1,0 +1,20 @@
+Jonathan Frias
+N00680283
+
+This is project 1, which solves the classic producer/consumer problem.
+It creates shared memory as well as semaphores for the forked
+child process to communicate.
+
+I had a fun time writing this program. I feel comfortable using C,
+but the the semaphores did trip me up a bit.
+I think I did something interesting in this program.
+
+I wrote a function, syncronizedAccess, that uses a function pointer,
+then calls the function using that function pointer. Not related,
+but intersting.
+
+I found that for my program, higher numbers tended to run alot longer.
+Not sure if this is due to ineffiecient O(n^2) problems, or if there
+is a semaphore bug, however the code does comlete sucessfully for all
+tests.
+
