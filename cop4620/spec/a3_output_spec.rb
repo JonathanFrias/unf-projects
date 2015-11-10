@@ -845,4 +845,102 @@ RSpec.describe A2 do
       it { is_not_valid }
     end
   end
+
+  context "jake's examples" do
+    describe "test1" do
+
+      let(:input) do
+        "
+        void main(void x) {
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
+
+    describe "test2" do
+
+      let(:input) do
+        "
+        void main(void) {
+            int a;
+            { int a; }
+            int a;
+            a = 5 + 7;
+            return;
+          }
+        "
+      end
+
+      it { is_not_valid }
+    end
+
+    describe "test3" do
+
+      let(:input) do
+        "
+        void main(int a, int b) {
+            int a;
+            int c;
+            int d;
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
+
+    describe "test4" do
+
+      let(:input) do
+        "
+        int a;
+        void main(int b) {
+            a = 5;
+            return;
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
+
+    describe "test5" do
+
+      let(:input) do
+        "
+        int a;
+        void b(void) {
+        }
+        int c;
+
+        void d(void) {
+          c = 5;
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test6" do
+
+      let(:input) do
+        "
+        int a;
+        void main(int b) {
+            int c;
+            a = 5;
+            if (1) {
+                c = 6;
+                a = 7;
+            }
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+  end
 end
