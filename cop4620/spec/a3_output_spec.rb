@@ -903,7 +903,7 @@ RSpec.describe A2 do
         "
       end
 
-      it { is_not_valid }
+      it { is_valid }
     end
 
     describe "test5" do
@@ -917,6 +917,9 @@ RSpec.describe A2 do
 
         void d(void) {
           c = 5;
+        }
+
+        void main(void) {
         }
         "
       end
@@ -936,6 +939,39 @@ RSpec.describe A2 do
                 c = 6;
                 a = 7;
             }
+        }
+        "
+      end
+
+      it { is_valid }
+    end
+
+    describe "test6" do
+
+      let(:input) do
+        "
+        int a;
+        void f(int b) {
+            a = b = 7;
+        }
+        void main(void) {
+            b = 6;
+        }
+        "
+      end
+
+      it { is_not_valid }
+    end
+
+    describe "test6" do
+
+      let(:input) do
+        "
+        void main(int hello) {
+            int a;
+            { int a; }
+            a = 5 + 7;
+            return;
         }
         "
       end

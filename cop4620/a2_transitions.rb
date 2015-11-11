@@ -324,6 +324,7 @@ module A2Transitions
   end
 
   def def_variable(type, id)
+    reject if type == "VOID"
     reject("Variable #{id} already defined") if current_context.variables[id]
     current_context.variables[id] = type
   end
