@@ -80,7 +80,7 @@ class A2
     begin
       goto :start
     rescue A2Transitions::RejectError => e
-      puts e.backtrace
+      puts e.backtrace if $debug
       return "REJECT"
     end
 
