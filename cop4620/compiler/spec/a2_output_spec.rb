@@ -40,10 +40,10 @@ RSpec.describe A2 do
         int a[2];
 
         int b;
-      int main(void) { return 0;}
       float f(int x) { return 1.1; }
 
       void g( void) {}
+      int main(void) { return 0;}
       "
     end
 
@@ -61,13 +61,12 @@ RSpec.describe A2 do
 
     let(:func_and_var) do
       "
-      int main(int a, float b, int c) {
-        return 0;
-      }
-
       int a;
       int f(float x) {
 
+        return 0;
+      }
+      int main(int a, float b, int c) {
         return 0;
       }
       "
@@ -87,7 +86,12 @@ RSpec.describe A2 do
 
     let(:multiply) do
       "
-      int main(void) {
+      int f(float x, float y) {
+      int asdflkjsadlfkj;
+        asdflkjsadlfkj = 12.231 * 2.1;
+        return 0;
+      }
+            int main(void) {
         int result;
         int a;
         int b;
@@ -95,32 +99,24 @@ RSpec.describe A2 do
         result = a * b * (12* (23/c));
         return result;
       }
-
-      int f(float x, float y) {
-      int asdflkjsadlfkj;
-        asdflkjsadlfkj = 12.231 * 2.1;
-        return 0;
-      }
       "
     end
 
     let(:add) do
       "
-      int main(void) {
+      void f(float x, float y) {
+      int asdflkjsadlfkj;
+        asdflkjsadlfkj = 12.231 + 2.1;
+
+      }
+int main(void) {
         int result;
         int a;
         int b;
         int c;
         result = a + b - (12+ (23-c));
         return 0;
-      }
-
-      void f(float x, float y) {
-      int asdflkjsadlfkj;
-        asdflkjsadlfkj = 12.231 + 2.1;
-
-      }
-      "
+      }      "
     end
 
     let(:invalid1) do
@@ -493,22 +489,7 @@ void sort( int a[], int low, int high )
   }
 }
 
-void main (void)
-{ int i;
-int x[213];
-  i = 0;
-  while (i < 10)
-  {  x[i] = input();
-     i = i + 1;
-  }
-  sort(x,0,10);
-  i = 0;
-  while (i < 10)
-  {
-  output(x[i]);
-  i = i + 1;
-  }
-}
+
 
 int function_call(int x, int y) { return 1;}
 int msadnain (int  a[], int sda, float b)
@@ -562,7 +543,24 @@ float main31 (void)
 {
 float x;
     return x;
-}"
+}
+void main (void)
+{ int i;
+int x[213];
+  i = 0;
+  while (i < 10)
+  {  x[i] = input();
+     i = i + 1;
+  }
+  sort(x,0,10);
+  i = 0;
+  while (i < 10)
+  {
+  output(x[i]);
+  i = i + 1;
+  }
+}
+      "
     end
 
     let(:missing_semi) do
@@ -716,41 +714,38 @@ int noclue(int z[])
     let(:float_accept2) do
       "
       /* test21  testing float accept*/
-
-void main(void) {}
 int q[6];
 
 float noclue(float z[])
 {
 int x;
-	int s;
+  int s;
       float r;
 if(z[1]=7.0)
-		return z[0];
-	while(r>z[2])
-	{
-		if (x==2)
-			return 3.4E-6;
-	}
-
-
+    return z[0];
+  while(r>z[2])
+  {
+    if (x==2)
+      return 3.4E-6;
+  }
 }
+void main(void) {}
       "
     end
 
     let(:number_in_id) do
       "/*  test23 number in ID token */
 
-void main(void) {}
       int gcd(int adsf, int y) { return 1;}
 int gc1d ( int u , int v )
-{	// note prob here
-	if ( v == 0 )
-		return u ;
-	else
-		return gcd ( v , u - u / v * v );
-	/* note u-(u/v*v) = u mod v */
-}"
+{  // note prob here
+  if ( v == 0 )
+    return u ;
+  else
+    return gcd ( v , u - u / v * v );
+  /* note u-(u/v*v) = u mod v */
+}void main(void) {}
+"
     end
 
     let(:num_letter) do
@@ -760,10 +755,10 @@ int z[6];
 
 int noclue(int z[])
 {
-	int s;
+  int s;
   int 7a;
-	if(z[1] <= 7a)
-		return z;
+  if(z[1] <= 7a)
+    return z;
 }"
     end
 
@@ -776,12 +771,12 @@ int z[6];
 int noclue(int z[])
 {
 int b; int s;
-	if(z[1] >b= 7)		// = is token 26
-		return z;
-	while(r>z)
-	{if (x==2)
-			return x;
-	}
+  if(z[1] >b= 7)    // = is token 26
+    return z;
+  while(r>z)
+  {if (x==2)
+      return x;
+  }
 }
       "
     end
@@ -793,12 +788,12 @@ int z[6];
 
 int noclue(int z[])
 {
-	int s;
-	if(z[1] <<= 7)		// <<= is tokens 24&25
-		return z;
-	while(r>z)
-	{if (x==2)
-			return x;
+  int s;
+  if(z[1] <<= 7)    // <<= is tokens 24&25
+    return z;
+  while(r>z)
+  {if (x==2)
+      return x;
 	}
 
 
@@ -827,7 +822,7 @@ int noclue(int z[])
 
 int q[6];
 
-void main(void) {}
+
 float noclue(float z[])
 {
 	int s;
@@ -863,12 +858,12 @@ float noclue(float z[])
 	c = d;
 	}
 
-}"
+}void main(void) {}"
     end
 
     let(:nested_scope) do
       "
-void main(void) {}
+
       int main4(void) {
         {  // yay im nested!
           int x;
@@ -876,13 +871,13 @@ void main(void) {}
         }
         return 0;
       }
+      void main(void) {}
       "
     end
 
     let(:expressive_indicies) do
       "
 
-void main(void) {}
       int function(int a ,int b, int c) {
 
       return a;
@@ -897,12 +892,12 @@ void main(void) {}
         b[function(a, b, c)] = 2;
         return 123234523452345234;
       }
+      void main(void) {}
       "
     end
 
     let(:nested_stmts) do
       "
-void main(void) {}
 
       int msdain(void) {
       int r;
@@ -912,6 +907,8 @@ void main(void) {}
 			return x;
       }
 	}
+  void main(void) {}
+
       "
     end
 

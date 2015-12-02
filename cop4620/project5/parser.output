@@ -1,0 +1,351 @@
+Grammar
+
+    0 $accept: start $end
+
+    1 start: expression
+
+    2 expression: one_relation_expression
+    3           | two_relation_expression
+
+    4 one_relation_expression: renaming
+    5                        | restriction
+    6                        | projection
+
+    7 renaming: term RENAME ATTRIBUTE AS ATTRIBUTE
+
+    8 term: RELATION
+    9     | LEFT_PAREN expression RIGHT_PAREN
+
+   10 restriction: term WHERE comparison
+
+   11 projection: term
+   12           | term LEFT_BRACKET attribute_commalist RIGHT_BRACKET
+
+   13 attribute_commalist: ATTRIBUTE
+   14                    | ATTRIBUTE COMMA attribute_commalist
+
+   15 two_relation_expression: projection binary_operation expression
+
+   16 binary_operation: BINARY_OP
+
+   17 comparison: ATTRIBUTE COMPARE DIGIT
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+DIGIT (258) 17
+RENAME (259) 7
+ATTRIBUTE (260) 7 13 14 17
+BINARY_OP (261) 16
+AS (262) 7
+RELATION (263) 8
+COMPARE (264) 17
+WHERE (265) 10
+COMMA (266) 14
+LEFT_PAREN (267) 9
+RIGHT_PAREN (268) 9
+LEFT_BRACKET (269) 12
+RIGHT_BRACKET (270) 12
+
+
+Nonterminals, with rules where they appear
+
+$accept (16)
+    on left: 0
+start (17)
+    on left: 1, on right: 0
+expression (18)
+    on left: 2 3, on right: 1 9 15
+one_relation_expression (19)
+    on left: 4 5 6, on right: 2
+renaming (20)
+    on left: 7, on right: 4
+term (21)
+    on left: 8 9, on right: 7 10 11 12
+restriction (22)
+    on left: 10, on right: 5
+projection (23)
+    on left: 11 12, on right: 6 15
+attribute_commalist (24)
+    on left: 13 14, on right: 12 14
+two_relation_expression (25)
+    on left: 15, on right: 3
+binary_operation (26)
+    on left: 16, on right: 15
+comparison (27)
+    on left: 17, on right: 10
+
+
+state 0
+
+    0 $accept: . start $end
+
+    RELATION    shift, and go to state 1
+    LEFT_PAREN  shift, and go to state 2
+
+    start                    go to state 3
+    expression               go to state 4
+    one_relation_expression  go to state 5
+    renaming                 go to state 6
+    term                     go to state 7
+    restriction              go to state 8
+    projection               go to state 9
+    two_relation_expression  go to state 10
+
+
+state 1
+
+    8 term: RELATION .
+
+    $default  reduce using rule 8 (term)
+
+
+state 2
+
+    9 term: LEFT_PAREN . expression RIGHT_PAREN
+
+    RELATION    shift, and go to state 1
+    LEFT_PAREN  shift, and go to state 2
+
+    expression               go to state 11
+    one_relation_expression  go to state 5
+    renaming                 go to state 6
+    term                     go to state 7
+    restriction              go to state 8
+    projection               go to state 9
+    two_relation_expression  go to state 10
+
+
+state 3
+
+    0 $accept: start . $end
+
+    $end  shift, and go to state 12
+
+
+state 4
+
+    1 start: expression .
+
+    $default  reduce using rule 1 (start)
+
+
+state 5
+
+    2 expression: one_relation_expression .
+
+    $default  reduce using rule 2 (expression)
+
+
+state 6
+
+    4 one_relation_expression: renaming .
+
+    $default  reduce using rule 4 (one_relation_expression)
+
+
+state 7
+
+    7 renaming: term . RENAME ATTRIBUTE AS ATTRIBUTE
+   10 restriction: term . WHERE comparison
+   11 projection: term .
+   12           | term . LEFT_BRACKET attribute_commalist RIGHT_BRACKET
+
+    RENAME        shift, and go to state 13
+    WHERE         shift, and go to state 14
+    LEFT_BRACKET  shift, and go to state 15
+
+    $default  reduce using rule 11 (projection)
+
+
+state 8
+
+    5 one_relation_expression: restriction .
+
+    $default  reduce using rule 5 (one_relation_expression)
+
+
+state 9
+
+    6 one_relation_expression: projection .
+   15 two_relation_expression: projection . binary_operation expression
+
+    BINARY_OP  shift, and go to state 16
+
+    $default  reduce using rule 6 (one_relation_expression)
+
+    binary_operation  go to state 17
+
+
+state 10
+
+    3 expression: two_relation_expression .
+
+    $default  reduce using rule 3 (expression)
+
+
+state 11
+
+    9 term: LEFT_PAREN expression . RIGHT_PAREN
+
+    RIGHT_PAREN  shift, and go to state 18
+
+
+state 12
+
+    0 $accept: start $end .
+
+    $default  accept
+
+
+state 13
+
+    7 renaming: term RENAME . ATTRIBUTE AS ATTRIBUTE
+
+    ATTRIBUTE  shift, and go to state 19
+
+
+state 14
+
+   10 restriction: term WHERE . comparison
+
+    ATTRIBUTE  shift, and go to state 20
+
+    comparison  go to state 21
+
+
+state 15
+
+   12 projection: term LEFT_BRACKET . attribute_commalist RIGHT_BRACKET
+
+    ATTRIBUTE  shift, and go to state 22
+
+    attribute_commalist  go to state 23
+
+
+state 16
+
+   16 binary_operation: BINARY_OP .
+
+    $default  reduce using rule 16 (binary_operation)
+
+
+state 17
+
+   15 two_relation_expression: projection binary_operation . expression
+
+    RELATION    shift, and go to state 1
+    LEFT_PAREN  shift, and go to state 2
+
+    expression               go to state 24
+    one_relation_expression  go to state 5
+    renaming                 go to state 6
+    term                     go to state 7
+    restriction              go to state 8
+    projection               go to state 9
+    two_relation_expression  go to state 10
+
+
+state 18
+
+    9 term: LEFT_PAREN expression RIGHT_PAREN .
+
+    $default  reduce using rule 9 (term)
+
+
+state 19
+
+    7 renaming: term RENAME ATTRIBUTE . AS ATTRIBUTE
+
+    AS  shift, and go to state 25
+
+
+state 20
+
+   17 comparison: ATTRIBUTE . COMPARE DIGIT
+
+    COMPARE  shift, and go to state 26
+
+
+state 21
+
+   10 restriction: term WHERE comparison .
+
+    $default  reduce using rule 10 (restriction)
+
+
+state 22
+
+   13 attribute_commalist: ATTRIBUTE .
+   14                    | ATTRIBUTE . COMMA attribute_commalist
+
+    COMMA  shift, and go to state 27
+
+    $default  reduce using rule 13 (attribute_commalist)
+
+
+state 23
+
+   12 projection: term LEFT_BRACKET attribute_commalist . RIGHT_BRACKET
+
+    RIGHT_BRACKET  shift, and go to state 28
+
+
+state 24
+
+   15 two_relation_expression: projection binary_operation expression .
+
+    $default  reduce using rule 15 (two_relation_expression)
+
+
+state 25
+
+    7 renaming: term RENAME ATTRIBUTE AS . ATTRIBUTE
+
+    ATTRIBUTE  shift, and go to state 29
+
+
+state 26
+
+   17 comparison: ATTRIBUTE COMPARE . DIGIT
+
+    DIGIT  shift, and go to state 30
+
+
+state 27
+
+   14 attribute_commalist: ATTRIBUTE COMMA . attribute_commalist
+
+    ATTRIBUTE  shift, and go to state 22
+
+    attribute_commalist  go to state 31
+
+
+state 28
+
+   12 projection: term LEFT_BRACKET attribute_commalist RIGHT_BRACKET .
+
+    $default  reduce using rule 12 (projection)
+
+
+state 29
+
+    7 renaming: term RENAME ATTRIBUTE AS ATTRIBUTE .
+
+    $default  reduce using rule 7 (renaming)
+
+
+state 30
+
+   17 comparison: ATTRIBUTE COMPARE DIGIT .
+
+    $default  reduce using rule 17 (comparison)
+
+
+state 31
+
+   14 attribute_commalist: ATTRIBUTE COMMA attribute_commalist .
+
+    $default  reduce using rule 14 (attribute_commalist)

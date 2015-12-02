@@ -314,7 +314,8 @@ module A2Transitions
   end
 
   def def_function(return_type, id, params)
-
+    reject("no more functions allowed after main!") if @main_defined
+    @main_defined = id == 'main'
     reject("function #{id} already defined") if root_context.functions[id]
     current_context.return_type = return_type
     current_context.id = id

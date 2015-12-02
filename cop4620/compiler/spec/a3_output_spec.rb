@@ -978,5 +978,19 @@ RSpec.describe A2 do
 
       it { is_valid }
     end
+    describe "test7" do
+
+      let(:input) do
+        "
+        void main(int hello) {
+            return;
+        }
+// main should be the last function
+void f(void) {}
+        "
+      end
+
+      it { is_not_valid }
+    end
   end
 end
