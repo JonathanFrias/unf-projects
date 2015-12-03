@@ -37,12 +37,17 @@ module A2Transitions
     type = goto :type_specifier
     id = goto :id
 
+
     accept "("
     params = goto :params, []
     accept ")"
     def_function(type, id, params || [])
     current_context.returned_type = 'VOID'
+    write_assembly "FUNC", id, current_context.return_type, params.count.to_s
+    write_assembly "BLOCK", "", "", ""
     goto :compound_statement, current_context
+    write_assembly "RETURN", "","",current_context.returned_type
+    write_assembly "END", "BLOCK", "", ""
     if current_context.returned_type != root_context.functions[id].return_type
       reject "returned type '#{current_context.returned_type}' does not match function defition '#{id}'->'#{type}'"
     end
@@ -117,12 +122,13 @@ module A2Transitions
     accept RETURN
     type = 'VOID'
     if current_token != ';'
-      type,_ = goto(:expression)
+      type,value = goto(:expression)
     end
     tmp = current_context
     while(tmp.id.nil?)
       tmp = current_context.prev_context
     end
+    tmp.returned_value = value
     tmp.returned_type = type
     accept ";"
     type
@@ -168,7 +174,9 @@ module A2Transitions
 
   def simple_expression
     return if [')', ';',  '}',  ']', ','].include? current_token
+    token = token_text
     type1, first = goto :additive_expression
+    first ||= token
     if relop?
       goto :relop
       type2, second = goto :additive_expression
@@ -271,7 +279,7 @@ module A2Transitions
     result = goto :args, root_context.functions[id].params.dup
     reject("argument count mismatch for function call #{id}") if result.count != 0
     expression = named_expression
-    write_assembly "CALL", id, '', expression
+    write_assembly "CALL", id, root_context.functions[id].params.count.to_s, expression
     accept RIGHT_PAREN
     [root_context.functions[id].return_type, expression]
   end
@@ -346,7 +354,7 @@ module A2Transitions
   def def_variable(type, id)
     reject if type == "VOID"
     reject("Variable #{id} already defined") if current_context.variables[id]
-    write_assembly "alloc", '4', '', id
+    write_assembly "ALLOC", '4', '', id
     current_context.variables[id] = type
   end
 
@@ -362,6 +370,11 @@ module A2Transitions
   def write_assembly(first, second, third=nil, fourth=nil)
     @assmebly ||= []
 
-    @assmebly << [first, second, third, fourth]
+    @assmebly << [line.to_s, first, second, third, fourth]
+  end
+
+  def line
+    @line ||= 0
+    @line += 1
   end
 end
