@@ -6,6 +6,9 @@ class A2
   def initialize(input)
     @tokens = A1.new(input).to_a + ["EOF"]
     @current_token = 0
+    @current_expression = nil
+    @expression_num = 0
+    @current_expression = nil
   end
 
   def next_token
@@ -83,7 +86,6 @@ class A2
       puts e.backtrace if $debug
       return "REJECT"
     end
-
 
     # if the above program didn't error, we're in the clear!
     if last_token?

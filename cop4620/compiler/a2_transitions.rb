@@ -43,7 +43,9 @@ module A2Transitions
     def_function(type, id, params || [])
     current_context.returned_type = 'VOID'
     goto :compound_statement, current_context
-    reject("returned type '#{current_context.returned_type}' does not match function defition '#{id}'->'#{type}'") if current_context.returned_type != root_context.functions[id].return_type
+    if current_context.returned_type != root_context.functions[id].return_type
+      reject "returned type '#{current_context.returned_type}' does not match function defition '#{id}'->'#{type}'"
+    end
     @current_context = current_context.prev_context
     type
   end
@@ -114,7 +116,9 @@ module A2Transitions
   def return_statement
     accept RETURN
     type = 'VOID'
-    type = goto(:expression) if current_token != ';'
+    if current_token != ';'
+      type,_ = goto(:expression)
+    end
     tmp = current_context
     while(tmp.id.nil?)
       tmp = current_context.prev_context
@@ -137,7 +141,7 @@ module A2Transitions
   end
 
   def expression_statement
-    result = goto :expression unless current_token == ';'
+    result,_ = goto :expression unless current_token == ';'
     accept ';'
     result
   end
@@ -147,8 +151,14 @@ module A2Transitions
     result = nil
 
     if next_token == '[' || next_token == '='
-      result = goto :simple_expression
-      result = goto :expression if soft_accept '='
+
+      id = token_text
+      result,_ = goto :simple_expression
+
+      if soft_accept '='
+        result,_ = goto :expression
+        write_assembly "ASSIGN", @current_expression, '', id
+      end
       reject("VOID return value should be ignored") if result == "VOID"
     end
 
@@ -158,10 +168,10 @@ module A2Transitions
 
   def simple_expression
     return if [')', ';',  '}',  ']', ','].include? current_token
-    type1 = goto :additive_expression
+    type1, first = goto :additive_expression
     if relop?
       goto :relop
-      type2 = goto :additive_expression
+      type2, second = goto :additive_expression
       reject("invalid expression near '#{previous_token} #{current_token} #{next_token}'") if [
         ']',
         ',',
@@ -175,19 +185,23 @@ module A2Transitions
         '==',
         '=',
       ].include? current_token
+      write_assembly "COMP", first, second, named_expression
       reject("Cannot compare #{type1} against #{type2}") if type2 != type1
     end
-    type1
+    [type1, first]
   end
 
   def additive_expression
-    type1 = goto :term
+    type1, first = goto :term
     while addop?
+      op = current_token == '+' ? 'ADD' : 'SUB'
       goto :addop
-      type2 = goto :term
+
+      type2, second = goto :term
+      write_assembly op, first, second, first=named_expression
       reject("Cannot add #{type1} and #{type2}") if type1 != type2 || type1 == "VOID" || type2 == "VOID"
     end
-    type1
+    [type1, first]
   end
 
   def relop
@@ -195,13 +209,15 @@ module A2Transitions
   end
 
   def term
-    type1 = goto :factor
+    type1, first= goto :factor
     while mulop?
+      op = current_token == '*' ? "MUL" : "DIV"
       goto :mulop
-      type2 = goto :factor
+      type2, second = goto :factor
+      write_assembly op, first, second, first=named_expression
       reject("Cannot multiply #{type1} with #{type2}") if type1 != type2 || type1 == 'VOID' || type2 == 'VOID'
     end
-    type1
+    [type1, first]
   end
 
   def var
@@ -210,7 +226,7 @@ module A2Transitions
     if current_token == LEFT_BRACKET
       type = type.gsub(/\[\]/, '')
       accept LEFT_BRACKET
-      index_expression = goto :expression
+      index_expression,_ = goto :expression
       reject("Must use integers to access array index") if index_expression != "INT"
       accept RIGHT_BRACKET
     end
@@ -224,7 +240,7 @@ module A2Transitions
     reject if ['*', '/', ')', ';', ']', ',', '<=', '>=', '<', '>', '!=', '+', '-', '=='].include? current_token
     if current_token == LEFT_PAREN
       accept LEFT_PAREN
-      result = goto :expression
+      result,_ = goto :expression
       accept RIGHT_PAREN
       result
     elsif current_token.size == 1
@@ -243,8 +259,9 @@ module A2Transitions
   def number
     result = 'INT' if integer?
     result ||= 'FLOAT'
+    num = token_text
     accept if token_type == 'CONSTANT' or reject
-    result
+    [result, num]
   end
 
   def call
@@ -253,13 +270,15 @@ module A2Transitions
     reject("function #{id} not defined") if root_context.functions[id].nil?
     result = goto :args, root_context.functions[id].params.dup
     reject("argument count mismatch for function call #{id}") if result.count != 0
+    expression = named_expression
+    write_assembly "CALL", id, '', expression
     accept RIGHT_PAREN
-    root_context.functions[id].return_type
+    [root_context.functions[id].return_type, expression]
   end
 
   def args(params)
     return params if current_token == ')'
-    type = goto :expression
+    type, _ = goto :expression
     reject("failed to determine type of expression") if type.nil?
     current_arg_type = params.shift
     reject("'#{type}' does not match '#{current_arg_type}'") if type != current_arg_type
@@ -327,10 +346,22 @@ module A2Transitions
   def def_variable(type, id)
     reject if type == "VOID"
     reject("Variable #{id} already defined") if current_context.variables[id]
+    write_assembly "alloc", '4', '', id
     current_context.variables[id] = type
   end
 
   def integer?
     token_type == 'CONSTANT' && token_text.gsub(/[0-9]/, '') == ''
+  end
+
+  def named_expression
+    @expression_num+= 1
+    @current_expression = "_t#{@expression_num}"
+  end
+
+  def write_assembly(first, second, third=nil, fourth=nil)
+    @assmebly ||= []
+
+    @assmebly << [first, second, third, fourth]
   end
 end
