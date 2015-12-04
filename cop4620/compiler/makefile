@@ -1,4 +1,4 @@
 build :
-	echo -e '#!/usr/bin/ruby' > p3;
-	cat main.rb >> p3;
-	chmod +x p3
+	echo -e '#!/usr/bin/ruby' > p4;
+	cat main.rb >> p4;
+	chmod +x p4

@@ -10,6 +10,8 @@ class A4 < A2
   end
 
   def to_s
-    "hey its a party!"
+    codes.map do |line|
+      line.join("\t\t");
+    end
   end
 end
