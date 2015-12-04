@@ -48,6 +48,7 @@ module A2Transitions
     goto :compound_statement, current_context
     write_assembly "RETURN", "","",current_context.returned_type
     write_assembly "END", "BLOCK", "", ""
+    write_assembly "END", "FUNC", id, ""
     if current_context.returned_type != root_context.functions[id].return_type
       reject "returned type '#{current_context.returned_type}' does not match function defition '#{id}'->'#{type}'"
     end
@@ -115,7 +116,10 @@ module A2Transitions
     accept '('
     goto :expression
     accept ')'
+    write_assembly "BLOCK", "", "", ""
     goto :statement
+    write_assembly "BR", "", "", back_patch
+    write_assembly "END", "BLOCK", "", ""
   end
 
   def return_statement
@@ -139,10 +143,14 @@ module A2Transitions
     accept LEFT_PAREN
     goto :expression
     accept RIGHT_PAREN
+    write_assembly "BLOCK", "", "", ""
     goto :statement
-    if current_token == ELSE
-      accept ELSE
+    write_assembly "END", "BLOCK", "", ""
+    if soft_accept ELSE
+      write_assembly "BR", "", "", back_patch
+      write_assembly "BLOCK", "", "", ""
       goto :statement
+      write_assembly "END", "BLOCK", "", ""
     end
   end
 
@@ -178,34 +186,47 @@ module A2Transitions
     type1, first = goto :additive_expression
     first ||= token
     if relop?
+      compare = {
+        "==" => "BRNEQ",
+        "!=" => "BREQ",
+        ">" => "BRLEQ",
+        "<" => "BRGEQ",
+        "<=" => "BRGT",
+        ">=" => "BRLT",
+      }[current_token]
       goto :relop
       type2, second = goto :additive_expression
       reject("invalid expression near '#{previous_token} #{current_token} #{next_token}'") if [
-        ']',
-        ',',
-        '<=',
-        '>=',
-        '<',
-        '>',
-        '!=',
-        '+',
-        '-',
-        '==',
-        '=',
+        "]",
+        ",",
+        "<=",
+        ">=",
+        "<",
+        ">",
+        "!=",
+        "+",
+        "-",
+        "==",
+        "=",
       ].include? current_token
       write_assembly "COMP", first, second, named_expression
+      write_assembly compare, "", "", back_patch
       reject("Cannot compare #{type1} against #{type2}") if type2 != type1
     end
     [type1, first]
   end
 
   def additive_expression
+    first_tmp = token_text
     type1, first = goto :term
+    first ||= first_tmp
     while addop?
       op = current_token == '+' ? 'ADD' : 'SUB'
       goto :addop
 
+      second_tmp = token_text
       type2, second = goto :term
+      second ||= second_tmp
       write_assembly op, first, second, first=named_expression
       reject("Cannot add #{type1} and #{type2}") if type1 != type2 || type1 == "VOID" || type2 == "VOID"
     end
@@ -286,10 +307,11 @@ module A2Transitions
 
   def args(params)
     return params if current_token == ')'
-    type, _ = goto :expression
+    type, name = goto :expression
     reject("failed to determine type of expression") if type.nil?
     current_arg_type = params.shift
     reject("'#{type}' does not match '#{current_arg_type}'") if type != current_arg_type
+    write_assembly "ARG", "", "", name
     goto :args, params if soft_accept ','
     params
   end
@@ -367,9 +389,14 @@ module A2Transitions
     @current_expression = "_t#{@expression_num}"
   end
 
+  def back_patch
+    @back_patch_num ||= 0
+    @back_patch_num += 1
+    @current_back_patch = "BACKP#{@back_patch_num}"
+  end
+
   def write_assembly(first, second, third=nil, fourth=nil)
     @assmebly ||= []
-
     @assmebly << [line.to_s, first, second, third, fourth]
   end
 

@@ -14,15 +14,16 @@ RSpec.describe A4 do
 
     it "runs" do
       expect(subject).to eq [
-        ['FUNC'   , 'main' , 'VOID' , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
-        ['ALLOC'  , '4'    , ''     , 'a'    ] ,
+        ["FUNC"   , "main" , "VOID" , "0"    ] ,
+        ["BLOCK"  , ""     , ""     , ""     ] ,
+        ["ALLOC"  , "4"    , ""     , "a"    ] ,
         ["ADD"    , "1"    , "2"    , "_t1"  ] ,
         ["ADD"    , "_t1"  , "3"    , "_t2"  ] ,
         ["ADD"    , "_t2"  , "4"    , "_t3"  ] ,
         ["ASSIGN" , "_t3"  , ""     , "a"    ] ,
         ["RETURN" , ""     , ""     , "VOID" ] ,
-        ["END"    , "BLOCK"  , ""    , ""    ] ,
+        ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "main" , ""     ] ,
       ]
     end
   end
@@ -39,8 +40,8 @@ RSpec.describe A4 do
 
     it "runs" do
       expect(subject).to eq [
-        ['FUNC'   , 'main' , 'VOID' , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
+        ["FUNC"   , "main" , "VOID" , "0"    ] ,
+        ["BLOCK"  , ""     , ""     , ""     ] ,
         ["ALLOC"  , "4"    , ""     , "a"    ] ,
         ["SUB"    , "1"    , "2"    , "_t1"  ] ,
         ["SUB"    , "_t1"  , "3"    , "_t2"  ] ,
@@ -48,6 +49,7 @@ RSpec.describe A4 do
         ["ASSIGN" , "_t3"  , ""     , "a"    ] ,
         ["RETURN" , ""     , ""     , "VOID" ] ,
         ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "main" , ""     ] ,
       ]
     end
   end
@@ -73,6 +75,7 @@ RSpec.describe A4 do
         ["ASSIGN" , "_t3"  , ""     , "a"    ] ,
         ["RETURN" , ""     , ""     , "VOID" ] ,
         ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "main" , ""     ] ,
       ]
     end
   end
@@ -90,7 +93,7 @@ RSpec.describe A4 do
     it "runs" do
       expect(subject).to eq [
         ["FUNC"   , "main" , "VOID" , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
+        ["BLOCK"  , ""     , ""     , ""     ] ,
         ["ALLOC"  , "4"    , ""     , "a"    ] ,
         ["DIV"    , "1"    , "2"    , "_t1"  ] ,
         ["DIV"    , "_t1"  , "3"    , "_t2"  ] ,
@@ -98,6 +101,7 @@ RSpec.describe A4 do
         ["ASSIGN" , "_t3"  , ""     , "a"    ] ,
         ["RETURN" , ""     , ""     , "VOID" ] ,
         ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "main" , ""     ] ,
       ]
     end
   end
@@ -115,7 +119,7 @@ RSpec.describe A4 do
     it "runs" do
       expect(subject).to eq [
         ["FUNC"   , "main" , "VOID" , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
+        ["BLOCK"  , ""     , ""     , ""     ] ,
         ["ALLOC"  , "4"    , ""     , "a"    ] ,
         ["MUL"    , "2"    , "3"    , "_t1"  ] ,
         ["ADD"    , "1"    , "_t1"  , "_t2"  ] ,
@@ -125,6 +129,7 @@ RSpec.describe A4 do
         ["ASSIGN" , "_t5"  , ""     , "a"    ] ,
         ["RETURN" , ""     , ""     , "VOID" ] ,
         ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "main" , ""     ] ,
       ]
     end
   end
@@ -149,15 +154,17 @@ RSpec.describe A4 do
     it "runs" do
       expect(subject).to eq [
         ["FUNC"   , "f"    , "INT"  , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
+        ["BLOCK"  , ""     , ""     , ""     ] ,
         ["RETURN" , ""     , ""     , "INT"  ] ,
-        ['END'    , 'BLOCK', ''     , ''     ] ,
+        ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "f"    , ""     ] ,
         ["FUNC"   , "g"    , "INT"  , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
+        ["BLOCK"  , ""     , ""     , ""     ] ,
         ["RETURN" , ""     , ""     , "INT"  ] ,
-        ['END'    , 'BLOCK', ''     , ''     ] ,
+        ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "g"    , ""     ] ,
         ["FUNC"   , "main" , "VOID" , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
+        ["BLOCK"  , ""     , ""     , ""     ] ,
         ["ALLOC"  , "4"    , ""     , "a"    ] ,
         ["CALL"   , "f"    , "0"    , "_t1"  ] ,
         ["MUL"    , "_t1"  , "3"    , "_t2"  ] ,
@@ -165,29 +172,8 @@ RSpec.describe A4 do
         ["MUL"    , "_t2"  , "_t3"  , "_t4"  ] ,
         ["ASSIGN" , "_t4"  , ""     , "a"    ] ,
         ["RETURN" , ""     , ""     , "VOID" ] ,
-        ['END'    , 'BLOCK', ''     , ''     ] ,
-      ]
-    end
-  end
-
-  context "can compare stuff" do
-    let(:input) do
-      "
-        void main(void) {
-          int a;
-          2 > 3;
-        }
-      "
-    end
-
-    it "runs" do
-      expect(subject).to eq [
-        ["FUNC"   , "main" , "VOID" , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
-        ["ALLOC"  , "4"    , ""     , "a"    ] ,
-        ["COMP"   , "2"    , "3"    , "_t1"  ] ,
-        ["RETURN" , ""     , ""     , "VOID" ] ,
-        ['END'    , 'BLOCK', ''     , ''     ] ,
+        ["END"    , "BLOCK", ""     , ""     ] ,
+        ["END"    , "FUNC" , "main" , ""     ] ,
       ]
     end
   end
@@ -207,17 +193,139 @@ RSpec.describe A4 do
 
     it "runs" do
       expect(subject).to eq [
-        ["FUNC"   , "f"    , "VOID" , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
-        ["RETURN" , ""     , ""     , "VOID" ] ,
-        ['END'    , 'BLOCK', ''     , ''     ] ,
-        ["FUNC"   , "main" , "VOID" , "0"    ] ,
-        ['BLOCK'  , ''     , ''     , ''     ] ,
-        ["ALLOC"  , "4"    , ""     , "a"    ] ,
-        ["COMP"   , "a"    , "2"    , "_t1"  ] ,
-        ["CALL"   , "f"    , "0"    , "_t2"  ] ,
-        ["RETURN" , ""     , ""     , "VOID" ] ,
-        ['END'    , 'BLOCK', ''     , ''     ] ,
+        ["FUNC"   , "f"    , "VOID" , "0"     ] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["RETURN" , ""     , ""     , "VOID"  ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["END"    , "FUNC" , "f"    , ""      ] ,
+        ["FUNC"   , "main" , "VOID" , "0"     ] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["ALLOC"  , "4"    , ""     , "a"     ] ,
+        ["COMP"   , "a"    , "2"    , "_t1"   ] ,
+        ["BRNEQ"  , ""     , ""     , "BACKP1"] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["CALL"   , "f"    , "0"    , "_t2"   ] ,
+        ["BR"     , ""     , ""     , "BACKP2"] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["RETURN" , ""     , ""     , "VOID"  ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["END"    , "FUNC" , "main" , ""      ] ,
+      ]
+    end
+  end
+
+  context "if statements" do
+    let(:input) do
+      "
+        void f(void) { }
+        void main(void) {
+          int a;
+          if(a == 2) {
+            f();
+          }
+        }
+      "
+    end
+
+    it "runs" do
+      expect(subject).to eq [
+        ["FUNC"   , "f"    , "VOID" , "0"     ] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["RETURN" , ""     , ""     , "VOID"  ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["END"    , "FUNC" , "f"    , ""      ] ,
+        ["FUNC"   , "main" , "VOID" , "0"     ] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["ALLOC"  , "4"    , ""     , "a"     ] ,
+        ["COMP"   , "a"    , "2"    , "_t1"   ] ,
+        ["BRNEQ"  , ""     , ""     , "BACKP1"] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["CALL"   , "f"    , "0"    , "_t2"   ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["RETURN" , ""     , ""     , "VOID"  ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["END"    , "FUNC" , "main" , ""      ] ,
+      ]
+    end
+  end
+
+  context "if statements" do
+    let(:input) do
+      "
+        void f(void) { }
+        void main(void) {
+          int a;
+          if(a == 2) {
+            f();
+          } else {
+            f();
+          }
+        }
+      "
+    end
+
+    it "runs" do
+      expect(subject).to eq [
+        ["FUNC"   , "f"    , "VOID" , "0"     ] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["RETURN" , ""     , ""     , "VOID"  ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["END"    , "FUNC" , "f"    , ""      ] ,
+        ["FUNC"   , "main" , "VOID" , "0"     ] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["ALLOC"  , "4"    , ""     , "a"     ] ,
+        ["COMP"   , "a"    , "2"    , "_t1"   ] ,
+        ["BRNEQ"  , ""     , ""     , "BACKP1"] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["CALL"   , "f"    , "0"    , "_t2"   ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["BR"     , ""     , ""     , "BACKP2"] ,
+        ["BLOCK"  , ""     , ""     , ""      ] ,
+        ["CALL"   , "f"    , "0"    , "_t3"   ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["RETURN" , ""     , ""     , "VOID"  ] ,
+        ["END"    , "BLOCK", ""     , ""      ] ,
+        ["END"    , "FUNC" , "main" , ""      ] ,
+      ]
+    end
+  end
+
+  context "functions" do
+    let(:input) do
+      "
+      int f(int x, int y) {
+        return x + y;
+      }
+
+      int main(int z) {
+        int a;
+        int b;
+        return f(a, b);
+      }
+      "
+    end
+
+    it "runs" do
+      expect(subject).to eq [
+        ["ALLOC"  , "4"     , ""    , "x"   ] ,
+        ["ALLOC"  , "4"     , ""    , "y"   ] ,
+        ["FUNC"   , "f"     , "INT" , "2"   ] ,
+        ["BLOCK"  , ""      , ""    , ""    ] ,
+        ["ADD"    , "x"     , "y"   , "_t1" ] ,
+        ["RETURN" , ""      , ""    , "INT" ] ,
+        ["END"    , "BLOCK" , ""    , ""    ] ,
+        ["END"    , "FUNC"  , "f"   , ""    ] ,
+        ["ALLOC"  , "4"     , ""    , "z"   ] ,
+        ["FUNC"   , "main"  , "INT" , "1"   ] ,
+        ["BLOCK"  , ""      , ""    , ""    ] ,
+        ["ALLOC"  , "4"     , ""    , "a"   ] ,
+        ["ALLOC"  , "4"     , ""    , "b"   ] ,
+        ["ARG"    , ""      , ""    , "a"   ] ,
+        ["ARG"    , ""      , ""    , "b"   ] ,
+        ["CALL"   , "f"     , "2"   , "_t2" ] ,
+        ["RETURN" , ""      , ""    , "INT" ] ,
+        ["END"    , "BLOCK" , ""    , ""    ] ,
+        ["END"    , "FUNC"  , "main", ""    ] ,
       ]
     end
   end
