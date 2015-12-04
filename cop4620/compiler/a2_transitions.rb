@@ -46,7 +46,8 @@ module A2Transitions
     write_assembly "FUNC", id, current_context.return_type, params.count.to_s
     write_assembly "BLOCK", "", "", ""
     goto :compound_statement, current_context
-    write_assembly "RETURN", current_context.returned_type, "", @current_expression
+    out = current_context.returned_type == 'VOID' ? '' : @current_expression || current_context.returned_value
+    write_assembly "RETURN", current_context.returned_type, "", out
     write_assembly "END", "BLOCK", "", ""
     write_assembly "END", "FUNC", id, ""
     if current_context.returned_type != root_context.functions[id].return_type
